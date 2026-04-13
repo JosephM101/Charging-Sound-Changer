@@ -2,7 +2,6 @@ package com.josephm101.chargingsoundchanger
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -17,9 +16,6 @@ import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
@@ -140,7 +136,7 @@ class MainActivity : ComponentActivity() {
 
     // Constants
     private val cardDefaultBodyTextStyle = TextStyle(fontSize = 13.sp)
-    private val cardElevation = 4.dp
+    //private val cardElevation = 4.dp
     private val cardInnerPadding = 20.dp
     private val cardOuterPaddingBottom = 16.dp
     private val cardIconSize = 30.dp

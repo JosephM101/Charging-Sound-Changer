@@ -5,7 +5,6 @@ import hu.autsoft.krate.SimpleKrate
 import hu.autsoft.krate.booleanPref
 import hu.autsoft.krate.default.withDefault
 import hu.autsoft.krate.floatPref
-import hu.autsoft.krate.intPref
 import hu.autsoft.krate.stringPref
 
 // Uses Krate library. See: https://github.com/ZenitechSoftware/Krate

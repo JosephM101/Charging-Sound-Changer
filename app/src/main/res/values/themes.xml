@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- <style name="Theme.BatterySoundChanger" parent="android:Theme.Material.Light.NoActionBar" /> -->
+    <style name="Base.Theme.BatterySoundChanger" parent="Theme.AppCompat.DayNight">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <style name="Theme.BatterySoundChanger" parent="Base.Theme.BatterySoundChanger" />
+</resources>

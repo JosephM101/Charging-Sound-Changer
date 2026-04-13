@@ -1,0 +1,53 @@
+<resources>
+    <string name="app_name" translatable="false">Charging Sound Changer</string>
+    <string name="app_display_name" translatable="false">Charging Sound Changer</string>
+
+    <string name="ok" translatable="false">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="hide">Hide</string>
+    <string name="open_android_sound_settings">Open Android Sound Settings</string>
+    <string name="got_it">Got it</string>
+    <string name="request_permission">Request permission</string>
+
+    <string name="title_activity_sound_selection_page">SoundSelectionPage</string>
+
+    <string name="ui_batteryOptimizationsCard_title">Battery Optimization</string>
+    <string name="ui_batteryOptimizationsCard_description">To reduce the chances of this app\'s sound service being terminated by Android while it is running in the background, you can tell Android to ignore this app for battery optimizations.\n\nTo disable battery optimization for this app, tap the button below.</string>
+    <string name="ui_batteryOptimizationsCard_disableBatteryOptimizations_button_text">Disable Battery Optimization</string>
+    <string name="ui_batteryOptimizationsCard_optimizations_disabled_scrolling_message">Battery Optimizations Disabled! Card will disappear on app restart.</string>
+
+    <string name="ui_overview_footer_appVersionString">version %1$s (%2$s)</string>
+
+    <string name="ui_overview_importantInformationCard_title">Important information</string>
+    <string name="ui_overview_importantInformationCard_message">This app spawns a service that runs in the foreground, and plays a sound of your choice when it detects that your device has been connected to a power source.\n\nFor best results, disable your device\'s built-in charging sound and vibration. This setting is usually a switch found under Sound settings in the Android Settings app.\n\nIf you\'ve done this already, tap \"Got it\" to dismiss this message.</string>
+
+    <string name="ui_overview_openAndroidSoundSettings_dialog_message">When the Settings app opens, scroll to the bottom and turn off the \"Charging sounds and vibration\" setting (may not appear the same on all devices).</string>
+    <string name="ui_overview_openAndroidSoundSettings_dialog_title">You\'re about to navigate to Android Sound Settings</string>
+
+    <string name="ui_alphaBuildNoticeCard_title">Alpha build</string>
+    <string name="ui_alphaBuildNoticeCard_message">This app is (very much) in the alpha stages of development, and may have bugs that will cause it to spontaneously stop working.\nPlease keep that in mind! :)</string>
+
+    <string name="ui_soundEnabledPreferenceCard_title">Sound enabled</string>
+    <string name="ui_soundEnabledPreferenceCard_description">Enable/disable charging sound</string>
+
+    <string name="ui_debounceEnabledPreferenceCard_title">Enable debounce</string>
+    <string name="ui_debounceEnabledPreferenceCard_description">Turn this on if the sound plays more than once when charging begins.</string>
+
+    <string name="ui_respectDnDPreferenceCard_title">Respect Do Not Disturb</string>
+    <string name="ui_respectDnDPreferenceCard_description">When enabled, sounds will not be played if Do Not Disturb is active.</string>
+
+    <string name="ui_chooseSoundPreferenceCard_title">Sound</string>
+    <string name="ui_chooseSoundPreferenceCard_description">Choose the sound that plays when a charger is connected.</string>
+
+    <string name="ui_chooseSoundPreferenceCard_filePermissions_dialog_message">In order to browse sounds, I need permission to access your phone\'s files. You\'ll only have to do this once. After you\'ve chosen a sound, you can revoke the permission in Android\'s settings, should you choose to do so.\n\nIf you don\'t grant permissions, you won\'t be able to add any sounds.</string>
+    <string name="ui_chooseSoundPreferenceCard_filePermissions_dialog_title">File permissions</string>
+    <string name="LOGGER_TAG_AudioFilePicker">AudioFilePicker</string>
+
+    <string name="ui_soundChooser_errorOpeningFile_dialogTitle">Error opening file</string>
+    <string name="dialog_soundChooser_errorOpeningFile_durationTooLongMessage">That sound is too long! Pick a sound that\'s %1$d seconds or shorter.</string>
+    <string name="dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported">I wasn\'t able to read that file. It may be corrupted or unsupported. Try a different file.</string>
+    <string name="service_notification_channel_name">Foreground Service Channel (Keep-alive)</string>
+    <string name="service_notification_channel_description">Persistent notification to keep service alive</string>
+    <string name="service_notification_notification_content_text">Charging Sound Service is running</string>
+
+</resources>

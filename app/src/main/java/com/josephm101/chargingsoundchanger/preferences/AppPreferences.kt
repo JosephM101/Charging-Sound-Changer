@@ -5,7 +5,6 @@ import com.squareup.moshi.Moshi
 import hu.autsoft.krate.SimpleKrate
 import hu.autsoft.krate.booleanPref
 import hu.autsoft.krate.default.withDefault
-import hu.autsoft.krate.intPref
 import hu.autsoft.krate.longPref
 import hu.autsoft.krate.moshi.moshi
 
@@ -14,8 +13,8 @@ class AppPreferences(context: Context) : SimpleKrate(context) {
         moshi = Moshi.Builder().build()
     }
 
-    // The last version code that the deprecation warning was shown for
-    var lastVersionCodeWhereKeepAndroidOpenWarningWasShown by longPref().withDefault(0)
+    // The last version code that the KeepAndroidOpen warning was shown for
+    var keepAndroidOpenWarningWasShownForThisVersionCode by longPref().withDefault(0)
 
     var hideOverviewDevMessageCard by booleanPref().withDefault(false)
     var hideOverviewInfoMessageCard by booleanPref().withDefault(false)

@@ -1,4 +1,4 @@
-package com.josephm101.chargingsoundchanger
+package com.josephm101.chargingsoundchanger.common
 
 import android.content.Context
 import android.content.pm.PackageInfo

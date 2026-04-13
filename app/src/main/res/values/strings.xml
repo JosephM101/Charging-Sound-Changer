@@ -26,7 +26,7 @@
     <string name="ui_overview_openAndroidSoundSettings_dialog_title">You\'re about to navigate to Android Sound Settings</string>
 
     <string name="ui_alphaBuildNoticeCard_title">Alpha build</string>
-    <string name="ui_alphaBuildNoticeCard_message">This app is (very much) in the alpha stages of development, and may have bugs that will cause it to spontaneously stop working.\nPlease keep that in mind! :)</string>
+    <string name="ui_alphaBuildNoticeCard_message">This app is (very much) in the alpha stages of development. Potentially major changes will be made from release to release, and the app may have bugs that will cause it to spontaneously stop working.\nPlease keep that in mind! :)</string>
 
     <string name="ui_soundEnabledPreferenceCard_title">Sound enabled</string>
     <string name="ui_soundEnabledPreferenceCard_description">Enable/disable charging sound</string>
@@ -42,11 +42,10 @@
 
     <string name="ui_chooseSoundPreferenceCard_filePermissions_dialog_message">In order to browse sounds, I need permission to access your phone\'s files. You\'ll only have to do this once. After you\'ve chosen a sound, you can revoke the permission in Android\'s settings, should you choose to do so.\n\nIf you don\'t grant permissions, you won\'t be able to add any sounds.</string>
     <string name="ui_chooseSoundPreferenceCard_filePermissions_dialog_title">File permissions</string>
-    <string name="LOGGER_TAG_AudioFilePicker">AudioFilePicker</string>
 
     <string name="ui_soundChooser_errorOpeningFile_dialogTitle">Error opening file</string>
     <string name="dialog_soundChooser_errorOpeningFile_durationTooLongMessage">That sound is too long! Pick a sound that\'s %1$d seconds or shorter.</string>
-    <string name="dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported">I wasn\'t able to read that file. It may be corrupted or unsupported. Try a different file.</string>
+    <string name="dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported">Sorry, I wasn\'t able to read that file. It may be corrupted or unsupported. Try a different file.</string>
     <string name="service_notification_channel_name">Foreground Service Channel (Keep-alive)</string>
     <string name="service_notification_channel_description">Persistent notification to keep service alive</string>
     <string name="service_notification_notification_content_text">Charging Sound Service is running</string>

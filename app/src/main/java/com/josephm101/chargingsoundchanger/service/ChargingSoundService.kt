@@ -19,16 +19,14 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.josephm101.chargingsoundchanger.DoNotDisturb
-import com.josephm101.chargingsoundchanger.IntentStrings
 import com.josephm101.chargingsoundchanger.MainActivity
 import com.josephm101.chargingsoundchanger.R
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import java.io.File
 
-
 /* A developer's note:
 
-Android development is kinda weird, especially when it comes to services. Even in Kotlin.
+Android development is kinda weird, especially when it comes to services.
 There is still a bunch of boilerplate code (makes up most of this source file) to do the following:
  - Start the service
  - Create a persistent notification that keeps Android from killing the service (hopefully)
@@ -86,17 +84,9 @@ class ChargingSoundService : Service() {
         }
     }
 
-    /*
-    private val onSoundTestRequestedReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            Log.i(serviceLogTag, "Received \"SOUND_TEST\"")
-            playChargingSound()
-        }
-    }
-     */
-
     // Handle setting up the broadcast receiver, creating a service notification, and bringing the service online
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        /// TODO: Add permission checks that stop the service from launching if any required permissions are not granted
         //onTaskRemoved(intent)
 
         if (showDebugToasts) {
@@ -121,22 +111,6 @@ class ChargingSoundService : Service() {
         Log.i(serviceLogTag, "INIT: Registered receiver (onChargingStatusChangedReceiver)") // Log what we've done
 
 
-        /* Here, we're going to register a special custom broadcast receiver that MainActivity can trigger. This will allow us to test
-         * if sound playback is working.
-        */
-        /*
-        val internalIntentFilter = IntentFilter().apply {
-            addAction(IntentStrings.ChargingSoundServiceTestSoundIntent)
-        }
-        ContextCompat.registerReceiver(
-            this,
-            onSoundTestRequestedReceiver,
-            internalIntentFilter,
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        ) // Register our IntentFilter with the BroadcastReceiver
-        Log.i(serviceLogTag, "INIT: Registered receiver (onSoundTestRequestedReceiver)") // Log what we've done
-    */
-
         // Create a notification channel for our persistent service notification (required for Android 8 Oreo and later; keeps Android from just nuking it when resources are low)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -145,7 +119,7 @@ class ChargingSoundService : Service() {
                 NotificationManager.IMPORTANCE_MIN
             )
 
-            // This notification shouldn't get in the way. Let's make it so it doesn't.
+            // This notification shouldn't get in the way; it's just a service notification. Let's make it so it doesn't.
             channel.setShowBadge(false)
             channel.enableVibration(false)
             channel.enableLights(false)
@@ -156,10 +130,7 @@ class ChargingSoundService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        /* Here, we set up our notification to carry out an action, defined by NotificationIntent, when tapped.
-         In this case, notificationIntent is set to this app's main activity. Therefore, when the
-         notification is tapped, the app's main activity will be launched.
-         */
+        /* Here, we set up our persistent notification that will launch the MainActivity when tapped. */
         val notificationIntent = Intent( // Create an intent that points to the app's MainActivity
             this,
             MainActivity::class.java
@@ -183,14 +154,47 @@ class ChargingSoundService : Service() {
             .setContentIntent(pendingIntent) // When the notification is tapped, launch MainActivity.
             .build() // Put it all together!
 
-        // Start the service as a foreground service with the notification we just created.
+        /* Start the service as a foreground service with the notification we just created. */
         startForeground(persistentNotificationID, notification)
 
         Log.i(serviceLogTag, "INIT: Foreground service has started")
         return START_STICKY // Tell OS to recreate the service when it has enough memory if the service was killed due to lack of memory
     }
 
+    override fun onBind(intent: Intent?): IBinder {
+        Log.e(serviceLogTag, "A bind to service was attempted. onBind is not (yet) implemented.")
+        TODO("A bind to service was attempted. onBind is not (yet) implemented")
+    }
+
+/*
+    override fun onTaskRemoved(rootIntent: Intent) {
+        val restartServiceIntent = Intent(applicationContext, this.javaClass)
+        restartServiceIntent.setPackage(packageName)
+        startService(restartServiceIntent)
+        super.onTaskRemoved(rootIntent)
+    }
+*/
+
+    override fun onCreate() {
+        super.onCreate()
+        Log.i(serviceLogTag, "Service was created")
+    }
+
+    override fun onDestroy() {
+        /* IF YOU WANT THIS SERVICE KILLED WITH THE APP THEN UNCOMMENT THE FOLLOWING LINE */
+        //handler.removeCallbacks(runnable)
+        if (showDebugToasts) {
+            Toast.makeText(this, "Service stopped", Toast.LENGTH_LONG).show()
+        }
+        Log.w(serviceLogTag, "Service was destroyed!")
+
+        unregisterReceiver(onChargingStatusChangedReceiver)
+        //unregisterReceiver(onSoundTestRequestedReceiver)
+    }
+
+
     /* This is the magic! */
+    /// TODO: Look into moving this function (and the corresponding testChargingSound() function in MainActivity) into a single object for consistency
     fun playChargingSound() {
         // Load the user preferences for the service
         val servicePreferences = ServicePreferences(applicationContext)
@@ -213,7 +217,7 @@ class ChargingSoundService : Service() {
         // Set playback volume from preferences.
         val playbackVolume = servicePreferences.chargingStartedSoundPlaybackVolume
 
-        // Let's do a few checks. First, we'll check to make sure that the sound file exists
+        // First check to make sure that the sound file exists
         val soundFile = File(servicePreferences.chargingStartedSoundFilePath)
         if (!soundFile.exists()) {
             // Log error
@@ -245,36 +249,5 @@ class ChargingSoundService : Service() {
         // Play the sound!
         Log.i(serviceLogTag, "playChargingSound(): playing audio")
         mediaPlayer.start()
-    }
-
-    override fun onBind(intent: Intent?): IBinder {
-        Log.e(serviceLogTag, "A bind to service was attempted. onBind is not (yet) implemented.")
-        TODO("A bind to service was attempted. onBind is not (yet) implemented")
-    }
-
-/*
-    override fun onTaskRemoved(rootIntent: Intent) {
-        val restartServiceIntent = Intent(applicationContext, this.javaClass)
-        restartServiceIntent.setPackage(packageName)
-        startService(restartServiceIntent)
-        super.onTaskRemoved(rootIntent)
-    }
-*/
-
-    override fun onCreate() {
-        super.onCreate()
-        Log.i(serviceLogTag, "Service was created")
-    }
-
-    override fun onDestroy() {
-        /* IF YOU WANT THIS SERVICE KILLED WITH THE APP THEN UNCOMMENT THE FOLLOWING LINE */
-        //handler.removeCallbacks(runnable);
-        if (showDebugToasts) {
-            Toast.makeText(this, "Service stopped", Toast.LENGTH_LONG).show()
-        }
-        Log.w(serviceLogTag, "Service was destroyed!")
-
-        unregisterReceiver(onChargingStatusChangedReceiver)
-        //unregisterReceiver(onSoundTestRequestedReceiver)
     }
 }

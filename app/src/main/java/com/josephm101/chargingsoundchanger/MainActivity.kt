@@ -88,6 +88,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.josephm101.chargingsoundchanger.common.LoggerTags
+import com.josephm101.chargingsoundchanger.common.VersionHelper
 import com.josephm101.chargingsoundchanger.preferences.AppPreferences
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import com.josephm101.chargingsoundchanger.service.ChargingSoundService
@@ -189,6 +191,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
+                        /// TODO: Add "More" menu icon button with links to GitHub repo, a link to the "Issues" section, and an "About" dialog with credits
                         TopAppBar(title = {
                             Text(stringResource(id = R.string.app_display_name))
                         })
@@ -268,11 +271,11 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun AndroidFreedomWarningDialog() {
         val dialogIsShown = remember {
-            mutableStateOf(appPreferences.lastVersionCodeWhereKeepAndroidOpenWarningWasShown != appVersionCode)
+            mutableStateOf(appPreferences.keepAndroidOpenWarningWasShownForThisVersionCode != appVersionCode)
         }
 
         fun rememberCurrentVersionCode() {
-            appPreferences.lastVersionCodeWhereKeepAndroidOpenWarningWasShown = appVersionCode
+            appPreferences.keepAndroidOpenWarningWasShownForThisVersionCode = appVersionCode
         }
 
         when {
@@ -867,17 +870,14 @@ class MainActivity : ComponentActivity() {
     }
 
     fun testChargingSound() {
-        //val testSoundBroadcast = Intent(IntentStrings.ChargingSoundServiceTestSoundIntent)
-        //sendBroadcast(testSoundBroadcast)
-
         // Set playback volume from preferences.
         val playbackVolume = servicePreferences.chargingStartedSoundPlaybackVolume
 
-        // Let's do a few checks. First, we'll check to make sure that the sound file exists
+        // First check to make sure that the sound file exists
         val soundFile = File(servicePreferences.chargingStartedSoundFilePath)
         if (!soundFile.exists()) {
             // Log error
-            Log.e("app", "testChargingSound(): could not find the sound file '${servicePreferences.chargingStartedSoundFilePath}'!")
+            Log.e(LoggerTags.MainActivity.DEFAULT, "testChargingSound(): could not find the sound file '${servicePreferences.chargingStartedSoundFilePath}'!")
             return // abort testChargingSound()
         }
 
@@ -892,24 +892,25 @@ class MainActivity : ComponentActivity() {
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
         )
-        Log.d("app", "testChargingSound(): Created media player")
+        Log.d(LoggerTags.MainActivity.DEFAULT, "testChargingSound(): Created media player")
 
         // Load the sound file and prepare the media player
         mediaPlayer.setDataSource(soundFile.absolutePath)
         mediaPlayer.prepare()
-        Log.d("app", "testChargingSound(): Loaded audio asset")
+        Log.d(LoggerTags.MainActivity.DEFAULT, "testChargingSound(): Loaded audio asset")
 
         // Set playback volume
         mediaPlayer.setVolume(playbackVolume, playbackVolume)
 
         // Play the sound!
-        Log.i("app", "testChargingSound(): playing audio")
+        Log.i(LoggerTags.MainActivity.DEFAULT, "testChargingSound(): playing audio")
         mediaPlayer.start()
     }
 
     @SuppressLint("Range")
     @Composable
     fun ChooseSoundPreferenceCard() {
+        val soundFilePickerLoggerTag = "SoundFilePicker"
         CustomCardWithTitleAndIconAndContent(
             title = stringResource(R.string.ui_chooseSoundPreferenceCard_title),
             iconResId = R.drawable.baseline_audiotrack_24
@@ -968,8 +969,8 @@ class MainActivity : ComponentActivity() {
                 val maxSoundDurationInMilliseconds = maxSoundDurationInSeconds * 1000
 
                 // Check the sound file to make sure it's valid
-                Log.d(getString(R.string.LOGGER_TAG_AudioFilePicker), "Selected file: $uri")
-                Log.d(getString(R.string.LOGGER_TAG_AudioFilePicker), "Verifying audio file")
+                Log.d(soundFilePickerLoggerTag, "Selected file: $uri")
+                Log.d(soundFilePickerLoggerTag, "Verifying audio file")
 
                 // Load audio file
                 val mediaMetadataRetriever = MediaMetadataRetriever()
@@ -982,7 +983,7 @@ class MainActivity : ComponentActivity() {
                 // Make sure duration isn't null before continuing (source file may be corrupted/invalid in this case, so just dump it; we'll pop up an error message)
                 if (soundDuration == null) {
                     Log.e(
-                        getString(R.string.LOGGER_TAG_AudioFilePicker),
+                        soundFilePickerLoggerTag,
                         "Could not retrieve audio file length. Assuming file is invalid"
                     )
                     // Show error dialog
@@ -996,7 +997,7 @@ class MainActivity : ComponentActivity() {
                 val soundDurationInMilliseconds: Int? = soundDuration.toIntOrNull()
                 if (soundDurationInMilliseconds == null) {
                     Log.e(
-                        getString(R.string.LOGGER_TAG_AudioFilePicker),
+                        soundFilePickerLoggerTag,
                         "Audio file length retrieved, but failed to convert to Int (original value: $soundDuration). Assuming file is invalid"
                     )
                     // Show error dialog
@@ -1008,7 +1009,7 @@ class MainActivity : ComponentActivity() {
 
                 // Log sound duration
                 Log.d(
-                    getString(R.string.LOGGER_TAG_AudioFilePicker),
+                    soundFilePickerLoggerTag,
                     "Audio file length: $soundDurationInMilliseconds"
                 )
                 mediaMetadataRetriever.close() // Close mediaMetadataRetriever & release file
@@ -1016,7 +1017,7 @@ class MainActivity : ComponentActivity() {
                 // Check to make sure the chosen sound doesn't exceed the allowed length set by maxSoundDurationInMilliseconds
                 if (soundDurationInMilliseconds > maxSoundDurationInMilliseconds) {
                     Log.e(
-                        getString(R.string.LOGGER_TAG_AudioFilePicker),
+                        soundFilePickerLoggerTag,
                         "Audio file duration is too long! ($soundDurationInMilliseconds > $maxSoundDurationInMilliseconds)"
                     )
 
@@ -1033,14 +1034,14 @@ class MainActivity : ComponentActivity() {
                 // Because of the stupid Scoped Storage system on newer versions of Android, we'll need to copy the audio file to the app's user data folder so that we can access it later.
                 // A bit of a pain, but hey, at least if the source file goes missing, it'll still work!
                 Log.d(
-                    getString(R.string.LOGGER_TAG_AudioFilePicker),
+                    soundFilePickerLoggerTag,
                     "Copying audio file to internal app data directory"
                 )
 
                 val inputStream: InputStream? = contentResolver.openInputStream(uri)
                 if (inputStream == null) {
                     Log.d(
-                        getString(R.string.LOGGER_TAG_AudioFilePicker),
+                        soundFilePickerLoggerTag,
                         "inputStream was null"
                     )
                     inputStream?.close()
@@ -1062,7 +1063,7 @@ class MainActivity : ComponentActivity() {
                 inputStream.close()
 
                 Log.d(
-                    getString(R.string.LOGGER_TAG_AudioFilePicker),
+                    soundFilePickerLoggerTag,
                     "New URI: ${copiedFile.absolutePath}"
                 )
 

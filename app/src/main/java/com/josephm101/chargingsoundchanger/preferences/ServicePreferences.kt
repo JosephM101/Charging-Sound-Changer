@@ -27,7 +27,7 @@ class ServicePreferences(context: Context) : SimpleKrate(context) {
     // This simulates default Android behavior.
     /// TODO: implement vibration on power connect since built-in Android functionality will be disabled
     var vibrationEnabled by booleanPref().withDefault(false)
-    var vibrationLengthMs by intPref().withDefault(800)
+    var vibrationLengthMs by floatPref().withDefault(800F)
 
     // When sound is played, wait a preset amount of time before it's possible to play the sound again.
     // May be useful for devices with finicky chargers, connections, etc.

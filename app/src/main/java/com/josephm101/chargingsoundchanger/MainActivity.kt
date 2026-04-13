@@ -2,6 +2,7 @@ package com.josephm101.chargingsoundchanger
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -16,6 +17,9 @@ import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
@@ -90,6 +94,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.josephm101.chargingsoundchanger.common.LoggerTags
 import com.josephm101.chargingsoundchanger.common.VersionHelper
+import com.josephm101.chargingsoundchanger.common.VibrationHelper
 import com.josephm101.chargingsoundchanger.preferences.AppPreferences
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import com.josephm101.chargingsoundchanger.service.ChargingSoundService
@@ -97,6 +102,7 @@ import com.josephm101.chargingsoundchanger.ui.theme.BatterySoundChangerTheme
 import java.io.File
 import java.io.InputStream
 import java.util.Locale
+import kotlin.math.roundToLong
 
 sealed class Screens(val route: String, val icon: ImageVector, val label: String) {
     data object Home : Screens("home", Icons.Default.Home, "Home")
@@ -130,6 +136,8 @@ data class BottomNavigationItem(
 
 
 class MainActivity : ComponentActivity() {
+    lateinit var vibrator: VibrationHelper
+
     // Constants
     private val cardDefaultBodyTextStyle = TextStyle(fontSize = 13.sp)
     private val cardElevation = 4.dp
@@ -176,6 +184,8 @@ class MainActivity : ComponentActivity() {
             e.printStackTrace()
             appVersion = "unknown (failed to retrieve)"
         }
+
+        vibrator = VibrationHelper(applicationContext)
 
         // startChargingSoundService() Now handled by PostNotificationPermissionsCard()
 
@@ -334,6 +344,8 @@ class MainActivity : ComponentActivity() {
             ShowDevMessagePreferenceCard()
             //DebounceEnabledPreferenceCard()
             SoundVolumePreferenceCard()
+            VibrationEnabledPreferenceCard()
+            //VibrationDurationPreferenceCard()
         }
     }
 
@@ -349,7 +361,7 @@ class MainActivity : ComponentActivity() {
             PostNotificationPermissionsCard()
 
             if (!permissionToIgnoreBatteryOptimizationsIsGranted()) {
-                BatteryOptimizationCard()
+                BatteryOptimizationPermissionCard()
             }
 
             if (!appPreferences.hideOverviewInfoMessageCard) {
@@ -561,7 +573,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalFoundationApi::class)
     //@Preview
     @Composable
-    fun BatteryOptimizationCard() {
+    fun BatteryOptimizationPermissionCard() {
         var hidden by remember {mutableStateOf(false)}
         AnimatedVisibility(
             visible = !hidden,
@@ -719,6 +731,40 @@ class MainActivity : ComponentActivity() {
                 servicePreferences.soundsEnabled = value
             }
         )
+    }
+
+    @Composable
+    fun VibrationEnabledPreferenceCard() {
+        SwitchCard(
+            title = "Enable vibration",
+            description = "Vibrate when charging begins",
+            booleanValue = servicePreferences.vibrationEnabled,
+            onCheckedChange = { value ->
+                servicePreferences.vibrationEnabled = value
+            }
+        )
+    }
+
+    @Composable
+    fun VibrationDurationPreferenceCard() {
+        CustomCardWithTitleAndIconAndContent(
+            title = "Vibration length",
+            iconResId = R.drawable.baseline_vibration_24
+        ) {
+            var sliderPosition by remember { mutableFloatStateOf(servicePreferences.vibrationLengthMs) }
+            Slider (
+                value = sliderPosition,
+                onValueChange = {
+                    sliderPosition = it
+                    servicePreferences.vibrationLengthMs = it
+                },
+                onValueChangeFinished = {
+                    vibrator.vibrateMs(servicePreferences.vibrationLengthMs.roundToLong())
+                },
+                valueRange = 100f..1000f,
+                steps = 8,
+            )
+        }
     }
 
     @Composable

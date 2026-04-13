@@ -741,6 +741,9 @@ class MainActivity : ComponentActivity() {
             booleanValue = servicePreferences.vibrationEnabled,
             onCheckedChange = { value ->
                 servicePreferences.vibrationEnabled = value
+                if (value) {
+                    vibrator.defaultVibrate()
+                }
             }
         )
     }

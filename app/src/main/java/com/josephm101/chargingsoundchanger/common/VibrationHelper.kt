@@ -30,4 +30,8 @@ class VibrationHelper(context: Context) {
             vibrator.vibrate(ms)
         }
     }
+
+    fun defaultVibrate() {
+        vibrateMs(1000)
+    }
 }

@@ -5,6 +5,7 @@
     <string name="ok" translatable="false">OK</string>
     <string name="cancel">Cancel</string>
     <string name="hide">Hide</string>
+    <string name="dismiss">Dismiss</string>
     <string name="open_android_sound_settings">Open Android Sound Settings</string>
     <string name="got_it">Got it</string>
     <string name="request_permission">Request permission</string>
@@ -16,7 +17,7 @@
     <string name="ui_batteryOptimizationsCard_disableBatteryOptimizations_button_text">Disable Battery Optimization</string>
     <string name="ui_batteryOptimizationsCard_optimizations_disabled_scrolling_message">Battery Optimizations Disabled! Card will disappear on app restart.</string>
 
-    <string name="ui_overview_footer_appVersionString">version %1$s (%2$s)</string>
+    <string name="ui_overview_footer_appVersionString" translatable="false">version %1$s (%2$s)</string>
 
     <string name="ui_overview_importantInformationCard_title">Important information</string>
     <string name="ui_overview_importantInformationCard_message">This app spawns a service that runs in the foreground, and plays a sound of your choice when it detects that your device has been connected to a power source.\n\nFor best results, disable your device\'s built-in charging sound and vibration. This setting is usually a switch found under Sound settings in the Android Settings app.\n\nIf you\'ve done this already, tap \"Got it\" to dismiss this message.</string>
@@ -49,5 +50,9 @@
     <string name="service_notification_channel_name">Foreground Service Channel (Keep-alive)</string>
     <string name="service_notification_channel_description">Persistent notification to keep service alive</string>
     <string name="service_notification_notification_content_text">Charging Sound Service is running</string>
+    <string name="keepAndroidOpenWarning_DialogBody" translatable="false">In September of 2026, Google will begin enforcing rules that require every Android developer to register with Google, or else their apps (even those released outside of the Play Store) will be blocked from installing on certified Android devices. These changes are expected to take full effect everywhere in 2027.\n\nI will not be registering with Google, and thus, this app will no longer function on certified Android devices. This is not my decision, and frankly nobody wants this. Especially us indie and hobbyist developers.\n\nTo learn more and support the cause, please tap \"Keep Android Open!\" to visit keepandroidopen.org.</string>
+    <string name="keepAndroidOpenWarning_DialogTitle">Keep Android Open</string>
+    <string name="keepAndroidOpenWarning_OpenWebpageButtonText">Keep Android Open!</string>
+    <string name="keepAndroidOpenURL" translatable="false">https://keepandroidopen.org/</string>
 
 </resources>

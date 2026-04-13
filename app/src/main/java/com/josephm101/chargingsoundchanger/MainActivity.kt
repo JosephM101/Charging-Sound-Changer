@@ -98,7 +98,6 @@ import java.util.Locale
 
 sealed class Screens(val route: String, val icon: ImageVector, val label: String) {
     data object Home : Screens("home", Icons.Default.Home, "Home")
-    // data object Sound : Screens("sound", Icons.Default.MusicNote, "Sounds")
     data object AdvancedSettings : Screens("advanced_settings", Icons.Default.Settings, "Advanced")
 
     companion object {
@@ -122,7 +121,6 @@ data class BottomNavigationItem(
     fun bottomNavigationItems() : List<BottomNavigationItem> {
         return listOf(
             Screens.getBottomNavigationItem(screen = Screens.Home),
-            // Screens.getBottomNavigationItem(screen = Screens.Sound),
             Screens.getBottomNavigationItem(screen = Screens.AdvancedSettings)
         )
     }
@@ -147,7 +145,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var appPreferences: AppPreferences
 
     private lateinit var appVersion: String
-    private var appVersionCode: Int = 0
+    private var appVersionCode: Long = 0
 
     private fun startChargingSoundService() {
         // Start ChargingSoundService
@@ -169,10 +167,9 @@ class MainActivity : ComponentActivity() {
 
         // (Try to) get app version name
         try {
-            val pInfo: PackageInfo =
-                applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0)
+            val pInfo: PackageInfo = VersionHelper.getAppPackageInfo(applicationContext)
             appVersion = pInfo.versionName
-            appVersionCode = pInfo.versionCode /// TODO: Deal with the fact that versionCode is deprecated
+            appVersionCode = VersionHelper.getAppVersionCode(pInfo)
         } catch (e: PackageManager.NameNotFoundException) {
             e.printStackTrace()
             appVersion = "unknown (failed to retrieve)"
@@ -225,7 +222,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    val transitionDurationMs = 200;
+                    val transitionDurationMs = 200
                     val transitionIn = fadeIn(animationSpec = tween(transitionDurationMs))
                     val transitionOut =  fadeOut(animationSpec = tween(transitionDurationMs))
 
@@ -246,13 +243,12 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.Home.route) {
                             MainAppContent(navController)
                         }
-                        // composable(Screens.Sound.route) {
-                        //    SoundSelectionScreen(navController)
-                        // }
                         composable(Screens.AdvancedSettings.route) {
                             AdvancedSettingsScreen(navController)
                         }
                     }
+
+                    //AndroidFreedomWarningDialog()
                 }
             }
         }
@@ -267,6 +263,58 @@ class MainActivity : ComponentActivity() {
         }
 
         return annotatedText
+    }
+
+    @Composable
+    fun AndroidFreedomWarningDialog() {
+        val dialogIsShown = remember {
+            mutableStateOf(appPreferences.lastVersionCodeWhereKeepAndroidOpenWarningWasShown != appVersionCode)
+        }
+
+        fun rememberCurrentVersionCode() {
+            appPreferences.lastVersionCodeWhereKeepAndroidOpenWarningWasShown = appVersionCode
+        }
+
+        when {
+            dialogIsShown.value -> {
+                AlertDialog(
+                    onDismissRequest = {
+                        dialogIsShown.value = false
+                    },
+                    title = {
+                        Text(text = stringResource(R.string.keepAndroidOpenWarning_DialogTitle))
+                    },
+                    text = {
+                        Text(stringResource(R.string.keepAndroidOpenWarning_DialogBody))
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                val intent =
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        getString(R.string.keepAndroidOpenURL).toUri()
+                                    )
+                                startActivity(intent)
+                                rememberCurrentVersionCode()
+                            },
+                        ) {
+                            Text(stringResource(R.string.keepAndroidOpenWarning_OpenWebpageButtonText))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                dialogIsShown.value = false
+                                rememberCurrentVersionCode()
+                            }
+                        ) {
+                            Text(getString(R.string.dismiss))
+                        }
+                    }
+                )
+            }
+        }
     }
 
     @Composable

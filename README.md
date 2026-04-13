@@ -9,8 +9,6 @@ This app supports a minimum of Android 7 (Nougat).
 
 This app supports WAV, MP3 and OGG files, with a length limit of 5 seconds.
 
-# How to use
-
 ## Installing
 \[WIP\]
 
@@ -21,7 +19,7 @@ After installing the app, you'll need to accept every permission to ensure prope
 - **Battery optimization permissions**: Required to ensure that the app can run in the background consistently, and to ensure that sounds aren't delayed too much.
 - **File permissions**: To load sounds, this app needs permission to access your files. Don't worry! This permission will only be used when you ask to load sounds. After a sound is chosen, it is copied to the app's local data directory for later. If you are keen, you could disable this permission after choosing a sound, and the app would continue to function.
 
-## Changing a setting
+## How to use
 This app effectively replaces Android's built-in sound that plays when a device is plugged in. Before enabling this app, you should disable your device's built-in functionality.
 
 On most Android phones, the process looks like this:

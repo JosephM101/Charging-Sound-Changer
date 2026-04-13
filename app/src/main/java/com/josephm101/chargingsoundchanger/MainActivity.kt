@@ -257,7 +257,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    //AndroidFreedomWarningDialog()
+                    AndroidFreedomWarningDialog()
                 }
             }
         }

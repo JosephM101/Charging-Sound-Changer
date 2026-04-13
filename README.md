@@ -19,7 +19,7 @@ On most Android phones, the process looks like this:
 
 This process may look different on phones from other brands that heavily customize their devices like Samsung.
 
-Once all of that is complete, choose a sound that's within the 5-second limit, turn it on and plug in your device!
+Once all of that is complete, choose a sound that's within the 5-second limit, turn it on and plug in your device! Sample sounds will be offered soon.
 
 ## Installing
 \[WIP\]

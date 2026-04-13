@@ -305,6 +305,7 @@ class MainActivity : ComponentActivity() {
                                         getString(R.string.keepAndroidOpenURL).toUri()
                                     )
                                 startActivity(intent)
+                                dialogIsShown.value = false
                                 rememberCurrentVersionCode()
                             },
                         ) {
@@ -423,7 +424,7 @@ class MainActivity : ComponentActivity() {
             val showRationaleDialog = remember { mutableStateOf(false) }
 
             // Check the status of the POST_NOTIFICATIONS permission
-            var hasNotificationPermission by remember {
+            val hasNotificationPermission = remember {
                 mutableStateOf(
                     ContextCompat.checkSelfPermission(
                         applicationContext,
@@ -440,20 +441,20 @@ class MainActivity : ComponentActivity() {
                             showRationaleDialog.value = true
                         }
                     } else {
-                        hasNotificationPermission = true
+                        hasNotificationPermission.value = true
                     }
                 }
             )
 
             when {
-                hasNotificationPermission -> {
+                hasNotificationPermission.value -> {
                     Log.d("PostNotificationPermissions", "Permissions granted! Starting service...")
                     startChargingSoundService() // Start service
                 }
             }
 
             AnimatedVisibility(
-                visible = !hasNotificationPermission,
+                visible = !hasNotificationPermission.value,
                 enter = fadeIn() + slideInHorizontally(),
                 exit = fadeOut() + slideOutHorizontally()
             ) {
@@ -544,13 +545,13 @@ class MainActivity : ComponentActivity() {
             val loopDuration: Long = 1000 // ms
             val notificationPermissionsGrantedTimerCheck = object : Runnable {
                 override fun run() {
-                    if (!hasNotificationPermission) {
+                    if (!hasNotificationPermission.value) {
                         if (ContextCompat.checkSelfPermission(
                                 applicationContext,
                                 Manifest.permission.POST_NOTIFICATIONS
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
-                            hasNotificationPermission = true
+                            hasNotificationPermission.value = true
                         } else {
                             // Restart the timer
                             loopHandler.postDelayed(this, loopDuration)
@@ -570,9 +571,9 @@ class MainActivity : ComponentActivity() {
     //@Preview
     @Composable
     fun BatteryOptimizationPermissionCard() {
-        var hidden by remember {mutableStateOf(false)}
+        val hidden = remember {mutableStateOf(false)}
         AnimatedVisibility(
-            visible = !hidden,
+            visible = !hidden.value,
             enter = fadeIn() + slideInHorizontally(),
             exit = fadeOut() + slideOutHorizontally()
         ) {
@@ -605,7 +606,7 @@ class MainActivity : ComponentActivity() {
         val batteryOptimizationGrantedTimerCheck = object : Runnable {
             override fun run() {
                 if (permissionToIgnoreBatteryOptimizationsIsGranted()) {
-                    hidden = true
+                    hidden.value = true
                 } else {
                     // Restart the timer
                     loopHandler.postDelayed(this, loopDuration)
@@ -619,7 +620,7 @@ class MainActivity : ComponentActivity() {
     //@Preview
     @Composable
     fun OverviewChangeSoundSettingsMessageCard() {
-        var hidden by remember{ mutableStateOf(false) }
+        val hidden = remember{ mutableStateOf(false) }
         val openAlertDialog = remember { mutableStateOf(false) }
 
         when {
@@ -664,7 +665,7 @@ class MainActivity : ComponentActivity() {
         }
 
         AnimatedVisibility(
-            visible = !hidden,
+            visible = !hidden.value,
             enter = fadeIn() + slideInHorizontally(),
             exit = fadeOut() + slideOutHorizontally()
         ) {
@@ -691,7 +692,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
                         appPreferences.hideOverviewInfoMessageCard = true
-                        hidden = true
+                        hidden.value = true
                     }
                 ) {
                     Text(
@@ -750,11 +751,12 @@ class MainActivity : ComponentActivity() {
             title = "Vibration length",
             iconResId = R.drawable.baseline_vibration_24
         ) {
-            var sliderPosition by remember { mutableFloatStateOf(servicePreferences.vibrationLengthMs) }
-            Slider (
-                value = sliderPosition,
+            val sliderPosition =
+                remember { mutableFloatStateOf(servicePreferences.vibrationLengthMs) }
+            Slider(
+                value = sliderPosition.floatValue,
                 onValueChange = {
-                    sliderPosition = it
+                    sliderPosition.floatValue = it
                     servicePreferences.vibrationLengthMs = it
                 },
                 onValueChangeFinished = {
@@ -808,11 +810,11 @@ class MainActivity : ComponentActivity() {
             title = "Sound Volume",
             iconResId = R.drawable.volume
         ) {
-            var sliderPosition by remember { mutableFloatStateOf(servicePreferences.chargingStartedSoundPlaybackVolume) }
+            val sliderPosition = remember { mutableFloatStateOf(servicePreferences.chargingStartedSoundPlaybackVolume) }
             Slider (
-                value = sliderPosition,
+                value = sliderPosition.floatValue,
                 onValueChange = {
-                    sliderPosition = it
+                    sliderPosition.floatValue = it
                     servicePreferences.chargingStartedSoundPlaybackVolume = it
                 },
                 onValueChangeFinished = {

@@ -2,13 +2,19 @@
 ### (I didn't have a better name)
 
 Charging Sound Changer is a very simple and fun Android app that "replaces" your device's built-in charging sound with one of your choosing.
-I was bored lol
+
+_I was bored lol_
 
 This app supports a minimum of Android 7 (Nougat).
 
 This app supports WAV, MP3 and OGG files, with a length limit of 5 seconds.
 
 # How to use
+
+## Installing
+\[WIP\]
+
+## Permissions
 After installing the app, you'll need to accept every permission to ensure proper functionality. Here are the permissions currently required, and their rationale:
 
 - **Notification permissions**: These permissions are required on Android 13 and later for apps to post notifications. This app needs those permissions for the service notification that allows it to continue running in the background with a smaller likelihood of being terminated by Android when resources are low.

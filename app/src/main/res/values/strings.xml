@@ -10,6 +10,10 @@
     <string name="got_it">Got it</string>
     <string name="request_permission">Request permission</string>
 
+    <string name="service_notification_channel_name">Foreground Service Channel (Keep-alive)</string>
+    <string name="service_notification_channel_description">Persistent notification to keep service alive</string>
+    <string name="service_notification_notification_content_text">Charging Sound Service is running</string>
+
     <string name="title_activity_sound_selection_page">SoundSelectionPage</string>
 
     <string name="ui_batteryOptimizationsCard_title">Battery Optimization</string>
@@ -46,12 +50,10 @@
     <string name="ui_soundChooser_errorOpeningFile_dialogTitle">Error opening file</string>
     <string name="dialog_soundChooser_errorOpeningFile_durationTooLongMessage">That sound is too long! Pick a sound that\'s %1$d seconds or shorter.</string>
     <string name="dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported">Sorry, I wasn\'t able to read that file. It may be corrupted or unsupported. Try a different file.</string>
-    <string name="service_notification_channel_name">Foreground Service Channel (Keep-alive)</string>
-    <string name="service_notification_channel_description">Persistent notification to keep service alive</string>
-    <string name="service_notification_notification_content_text">Charging Sound Service is running</string>
-    <string name="keepAndroidOpenWarning_DialogBody" translatable="false">In September of 2026, Google will begin enforcing rules that require every Android developer to register with Google, or else their apps (even those released outside of the Play Store) will be blocked from installing on certified Android devices. These changes are expected to take full effect everywhere in 2027.\n\nI will not be registering with Google, and thus, this app will no longer function on certified Android devices. This is not my decision, and frankly nobody wants this. Especially us indie and hobbyist developers.\n\nTo learn more and support the cause, please tap \"Keep Android Open!\" to visit keepandroidopen.org.</string>
-    <string name="keepAndroidOpenWarning_DialogTitle">Keep Android Open</string>
-    <string name="keepAndroidOpenWarning_OpenWebpageButtonText">Keep Android Open!</string>
+
+    <string name="keepAndroidOpenWarning_DialogBody" translatable="false">In September of 2026, Google will begin requiring every Android developer to register with Google, or else their apps (even those released outside of the Play Store) will be blocked from installing on certified Android devices. These changes will severely hurt users and the open and free nature which Android was founded on.\n\nI will not be registering with Google, and thus, this app will no longer function on certified Android devices (at least not without workarounds). This is not my decision, and frankly nobody wants this. Especially us indie and hobbyist developers.\n\nThis is not an ad. I\'m not asking for money. All I\'m asking is that you donate 5 minutes of your precious time to support this cause. Every voice matters.\n\nTo learn more and find out ways to support the cause, please tap \"Keep Android Open!\" to visit keepandroidopen.org.</string>
+    <string name="keepAndroidOpenWarning_DialogTitle" translatable="false">Keep Android Open</string>
+    <string name="keepAndroidOpenWarning_OpenWebpageButtonText" translatable="false">Keep Android Open!</string>
     <string name="keepAndroidOpenURL" translatable="false">https://keepandroidopen.org/</string>
 
 </resources>

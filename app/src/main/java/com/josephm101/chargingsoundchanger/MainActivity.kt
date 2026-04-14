@@ -98,6 +98,7 @@ import com.josephm101.chargingsoundchanger.ui.theme.BatterySoundChangerTheme
 import java.io.File
 import java.io.InputStream
 import java.util.Locale
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 sealed class Screens(val route: String, val icon: ImageVector, val label: String) {
@@ -181,6 +182,8 @@ class MainActivity : ComponentActivity() {
             appVersion = "unknown (failed to retrieve)"
         }
 
+        // Initialize vibration component
+        /// TODO: Test vibrator on physical device
         vibrator = VibrationHelper(applicationContext)
 
         // startChargingSoundService() Now handled by PostNotificationPermissionsCard()
@@ -342,7 +345,7 @@ class MainActivity : ComponentActivity() {
             //DebounceEnabledPreferenceCard()
             SoundVolumePreferenceCard()
             VibrationEnabledPreferenceCard()
-            //VibrationDurationPreferenceCard()
+            VibrationDurationPreferenceCard()
         }
     }
 
@@ -752,18 +755,23 @@ class MainActivity : ComponentActivity() {
             iconResId = R.drawable.baseline_vibration_24
         ) {
             val sliderPosition =
-                remember { mutableFloatStateOf(servicePreferences.vibrationLengthMs) }
+                remember { mutableIntStateOf(servicePreferences.vibrationLengthMs) }
+
             Slider(
-                value = sliderPosition.floatValue,
+                value = sliderPosition.intValue.toFloat(),
                 onValueChange = {
-                    sliderPosition.floatValue = it
-                    servicePreferences.vibrationLengthMs = it
+                    sliderPosition.intValue = it.toInt()
+                    servicePreferences.vibrationLengthMs = it.roundToInt()
                 },
                 onValueChangeFinished = {
-                    vibrator.vibrateMs(servicePreferences.vibrationLengthMs.roundToLong())
+                    vibrator.vibrateMs(servicePreferences.vibrationLengthMs.toLong())
                 },
                 valueRange = 100f..1000f,
-                steps = 8,
+                steps = 8, // Comes out to 10 steps, including beginning and end.
+            )
+            Text(
+                style = MaterialTheme.typography.bodySmall,
+                text = "${servicePreferences.vibrationLengthMs}ms"
             )
         }
     }

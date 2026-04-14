@@ -5,6 +5,7 @@ import hu.autsoft.krate.SimpleKrate
 import hu.autsoft.krate.booleanPref
 import hu.autsoft.krate.default.withDefault
 import hu.autsoft.krate.floatPref
+import hu.autsoft.krate.intPref
 import hu.autsoft.krate.stringPref
 
 // Uses Krate library. See: https://github.com/ZenitechSoftware/Krate
@@ -26,7 +27,7 @@ class ServicePreferences(context: Context) : SimpleKrate(context) {
     // This simulates default Android behavior.
     /// TODO: implement vibration on power connect since built-in Android functionality will be disabled
     var vibrationEnabled by booleanPref().withDefault(false)
-    var vibrationLengthMs by floatPref().withDefault(800F)
+    var vibrationLengthMs by intPref().withDefault(400)
 
     // When sound is played, wait a preset amount of time before it's possible to play the sound again.
     // May be useful for devices with finicky chargers, connections, etc.

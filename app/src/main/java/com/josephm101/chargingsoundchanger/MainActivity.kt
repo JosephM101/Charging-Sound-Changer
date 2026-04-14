@@ -60,6 +60,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -99,7 +100,6 @@ import java.io.File
 import java.io.InputStream
 import java.util.Locale
 import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 
 sealed class Screens(val route: String, val icon: ImageVector, val label: String) {
     data object Home : Screens("home", Icons.Default.Home, "Home")
@@ -332,6 +332,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun AdvancedSettingsScreen(navController: NavHostController) {
+        val vibrationDurationPreferenceCardShouldBeEnabled = remember { mutableStateOf(servicePreferences.vibrationEnabled) }
         Column(
             modifier = Modifier
                 // .padding(8.dp)
@@ -344,8 +345,8 @@ class MainActivity : ComponentActivity() {
             ShowDevMessagePreferenceCard()
             //DebounceEnabledPreferenceCard()
             SoundVolumePreferenceCard()
-            VibrationEnabledPreferenceCard()
-            VibrationDurationPreferenceCard()
+            VibrationEnabledPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled)
+            VibrationDurationPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled)
         }
     }
 
@@ -462,11 +463,11 @@ class MainActivity : ComponentActivity() {
                 exit = fadeOut() + slideOutHorizontally()
             ) {
                 CustomCardWithTitleAndIconAndContent(
-                    title = "Notification permissions required",
+                    title = stringResource(R.string.ui_notificationPermissionsRequired_dialogTitle),
                     iconResId = R.drawable.baseline_notifications_24
                 ) {
                     Text(
-                        text = "On Android 13 and later, notification permissions are required for foreground services. Don't worry, we're not going to bombard you with alerts. This is necessary to reduce the chance that the app's service will be terminated by Android.",
+                        text = stringResource(R.string.ui_notificationPermissionsRequired_dialogBody),
                         style = cardDefaultBodyTextStyle
                     )
                     Spacer(modifier = Modifier.size(width = 0.dp, height = 12.dp))
@@ -483,7 +484,7 @@ class MainActivity : ComponentActivity() {
                         }
                     ) {
                         Text(
-                            text = "Request Permissions",
+                            text = stringResource(R.string.request_permissions),
                             modifier = Modifier
                                 .basicMarquee(velocity = 50.dp)
                         )
@@ -498,7 +499,7 @@ class MainActivity : ComponentActivity() {
                         }
                     ) {
                         Text(
-                            text = "Open Android Settings for this app",
+                            text = stringResource(R.string.open_android_settings_for_this_app),
                             modifier = Modifier
                                 .basicMarquee(velocity = 50.dp)
                         )
@@ -734,13 +735,14 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun VibrationEnabledPreferenceCard() {
+    fun VibrationEnabledPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled: MutableState<Boolean>) {
         SwitchCard(
             title = "Enable vibration",
             description = "Vibrate when charging begins",
             booleanValue = servicePreferences.vibrationEnabled,
             onCheckedChange = { value ->
                 servicePreferences.vibrationEnabled = value
+                vibrationDurationPreferenceCardShouldBeEnabled.value = value
                 if (value) {
                     vibrator.defaultVibrate()
                 }
@@ -749,30 +751,34 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun VibrationDurationPreferenceCard() {
-        CustomCardWithTitleAndIconAndContent(
-            title = "Vibration length",
-            iconResId = R.drawable.baseline_vibration_24
-        ) {
-            val sliderPosition =
-                remember { mutableIntStateOf(servicePreferences.vibrationLengthMs) }
+    fun VibrationDurationPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled: MutableState<Boolean>) {
+        when {
+            vibrationDurationPreferenceCardShouldBeEnabled.value -> {
+                CustomCardWithTitleAndIconAndContent(
+                    title = "Vibration length",
+                    iconResId = R.drawable.baseline_vibration_24
+                ) {
+                    val sliderPosition =
+                        remember { mutableIntStateOf(servicePreferences.vibrationLengthMs) }
 
-            Slider(
-                value = sliderPosition.intValue.toFloat(),
-                onValueChange = {
-                    sliderPosition.intValue = it.toInt()
-                    servicePreferences.vibrationLengthMs = it.roundToInt()
-                },
-                onValueChangeFinished = {
-                    vibrator.vibrateMs(servicePreferences.vibrationLengthMs.toLong())
-                },
-                valueRange = 100f..1000f,
-                steps = 8, // Comes out to 10 steps, including beginning and end.
-            )
-            Text(
-                style = MaterialTheme.typography.bodySmall,
-                text = "${servicePreferences.vibrationLengthMs}ms"
-            )
+                    Slider(
+                        value = sliderPosition.intValue.toFloat(),
+                        onValueChange = {
+                            sliderPosition.intValue = it.toInt()
+                            servicePreferences.vibrationLengthMs = it.roundToInt()
+                        },
+                        onValueChangeFinished = {
+                            vibrator.vibrateMs(servicePreferences.vibrationLengthMs.toLong())
+                        },
+                        valueRange = 100f..1000f,
+                        steps = 17, // Comes out to 10 steps, including beginning and end.
+                    )
+                    Text(
+                        style = MaterialTheme.typography.bodySmall,
+                        text = "${servicePreferences.vibrationLengthMs}ms"
+                    )
+                }
+            }
         }
     }
 

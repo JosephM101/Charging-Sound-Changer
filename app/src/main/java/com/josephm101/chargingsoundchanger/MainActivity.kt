@@ -207,36 +207,37 @@ class MainActivity : ComponentActivity() {
                     },
                     bottomBar = {
                         NavigationBar {
-                            BottomNavigationItem().bottomNavigationItems().forEachIndexed { index, navigationItem ->
-                                NavigationBarItem(
-                                    selected = index == navigationSelectedItem,
-                                    label = {
-                                        Text(navigationItem.label)
-                                    },
-                                    icon = {
-                                        Icon(
-                                            navigationItem.icon,
-                                            contentDescription = navigationItem.label
-                                        )
-                                    },
-                                    onClick = {
-                                        navigationSelectedItem = index
-                                        navController.navigate(navigationItem.route) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
+                            BottomNavigationItem().bottomNavigationItems()
+                                .forEachIndexed { index, navigationItem ->
+                                    NavigationBarItem(
+                                        selected = index == navigationSelectedItem,
+                                        label = {
+                                            Text(navigationItem.label)
+                                        },
+                                        icon = {
+                                            Icon(
+                                                navigationItem.icon,
+                                                contentDescription = navigationItem.label
+                                            )
+                                        },
+                                        onClick = {
+                                            navigationSelectedItem = index
+                                            navController.navigate(navigationItem.route) {
+                                                popUpTo(navController.graph.findStartDestination().id) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
                                             }
-                                            launchSingleTop = true
-                                            restoreState = true
                                         }
-                                    }
-                                )
-                            }
+                                    )
+                                }
                         }
                     }
                 ) { innerPadding ->
                     val transitionDurationMs = 200
                     val transitionIn = fadeIn(animationSpec = tween(transitionDurationMs))
-                    val transitionOut =  fadeOut(animationSpec = tween(transitionDurationMs))
+                    val transitionOut = fadeOut(animationSpec = tween(transitionDurationMs))
 
                     NavHost(
                         navController,
@@ -247,10 +248,10 @@ class MainActivity : ComponentActivity() {
                         //popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(200)) },
                         //popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(200)) }
 
-                        enterTransition =    { transitionIn },
-                        exitTransition =     { transitionOut },
+                        enterTransition = { transitionIn },
+                        exitTransition = { transitionOut },
                         popEnterTransition = { transitionIn },
-                        popExitTransition =  { transitionOut }
+                        popExitTransition = { transitionOut }
                     ) {
                         composable(Screens.Home.route) {
                             MainAppContent(navController)
@@ -332,7 +333,8 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun AdvancedSettingsScreen(navController: NavHostController) {
-        val vibrationDurationPreferenceCardShouldBeEnabled = remember { mutableStateOf(servicePreferences.vibrationEnabled) }
+        val vibrationDurationPreferenceCardShouldBeEnabled =
+            remember { mutableStateOf(servicePreferences.vibrationEnabled) }
         Column(
             modifier = Modifier
                 // .padding(8.dp)
@@ -379,20 +381,28 @@ class MainActivity : ComponentActivity() {
             ChooseSoundPreferenceCard()
 
             // Draw footer
-            Column(modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+            Column(
+                modifier = Modifier.padding(
+                    top = 16.dp,
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 8.dp
+                )
+            ) {
                 CenteredFooterText(stringResource(R.string.app_display_name))
                 CenteredFooterText(
                     stringResource(
                         R.string.ui_overview_footer_appVersionString,
                         appVersion,
                         appVersionCode
-                    ))
+                    )
+                )
             }
         }
     }
 
     @Composable
-    fun PreferencesTextLine(text: String){
+    fun PreferencesTextLine(text: String) {
         Spacer(modifier = Modifier.size(width = 0.dp, height = 8.dp))
         Text(
             text = accentedText(text = text),
@@ -409,7 +419,8 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun CenteredFooterText(text: String) {
-        Text(text,
+        Text(
+            text,
             modifier = Modifier
                 .fillMaxWidth()
                 .alpha(0.6f)
@@ -575,7 +586,7 @@ class MainActivity : ComponentActivity() {
     //@Preview
     @Composable
     fun BatteryOptimizationPermissionCard() {
-        val hidden = remember {mutableStateOf(false)}
+        val hidden = remember { mutableStateOf(false) }
         AnimatedVisibility(
             visible = !hidden.value,
             enter = fadeIn() + slideInHorizontally(),
@@ -624,7 +635,7 @@ class MainActivity : ComponentActivity() {
     //@Preview
     @Composable
     fun OverviewChangeSoundSettingsMessageCard() {
-        val hidden = remember{ mutableStateOf(false) }
+        val hidden = remember { mutableStateOf(false) }
         val openAlertDialog = remember { mutableStateOf(false) }
 
         when {
@@ -824,8 +835,9 @@ class MainActivity : ComponentActivity() {
             title = "Sound Volume",
             iconResId = R.drawable.volume
         ) {
-            val sliderPosition = remember { mutableFloatStateOf(servicePreferences.chargingStartedSoundPlaybackVolume) }
-            Slider (
+            val sliderPosition =
+                remember { mutableFloatStateOf(servicePreferences.chargingStartedSoundPlaybackVolume) }
+            Slider(
                 value = sliderPosition.floatValue,
                 onValueChange = {
                     sliderPosition.floatValue = it
@@ -861,7 +873,8 @@ class MainActivity : ComponentActivity() {
                     val cursor = contentResolver.query(uri, null, null, null, null)
                     cursor?.use {
                         if (it.moveToFirst()) {
-                            val displayName = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+                            val displayName =
+                                it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
                             // Do something with the file name
                             fileName = displayName
                         }
@@ -938,7 +951,10 @@ class MainActivity : ComponentActivity() {
         val soundFile = File(servicePreferences.chargingStartedSoundFilePath)
         if (!soundFile.exists()) {
             // Log error
-            Log.e(LoggerTags.MainActivity.DEFAULT, "testChargingSound(): could not find the sound file '${servicePreferences.chargingStartedSoundFilePath}'!")
+            Log.e(
+                LoggerTags.MainActivity.DEFAULT,
+                "testChargingSound(): could not find the sound file '${servicePreferences.chargingStartedSoundFilePath}'!"
+            )
             return // abort testChargingSound()
         }
 
@@ -1160,7 +1176,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun CustomColumnWithPaddingForCard(content: @Composable () -> Unit){
+    fun CustomColumnWithPaddingForCard(content: @Composable () -> Unit) {
         Column(
             modifier = Modifier
                 .padding(cardInnerPadding)
@@ -1206,7 +1222,8 @@ class MainActivity : ComponentActivity() {
                         style = cardDefaultBodyTextStyle,
                     )
                 }
-                Switch(checked = checked,
+                Switch(
+                    checked = checked,
                     onCheckedChange = {
                         checked = it
                         onCheckedChange(checked)
@@ -1300,10 +1317,14 @@ class MainActivity : ComponentActivity() {
             }
         } else {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) { // check if we already have permission
-                ActivityCompat.requestPermissions(this, arrayOf(
-                    Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ), 80)
+                != PackageManager.PERMISSION_GRANTED
+            ) { // check if we already have permission
+                ActivityCompat.requestPermissions(
+                    this, arrayOf(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ), 80
+                )
             }
         }
     }
@@ -1312,8 +1333,14 @@ class MainActivity : ComponentActivity() {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
         } else {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED
         }
     }
 }

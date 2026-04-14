@@ -42,6 +42,6 @@ This move, coupled with the changes Google have made to the Android Open Source 
 
 **I will not be registering with Google, and thus, this app's development will be stalled indefinitely beginning in September of 2026.**
 
-I am profoundly sad about this as I enjoyed making fun apps and tools for myself and for my friends, and the freedom that I've been lucky to enjoy for nearly 7 years now will be ripped away from me, and every other indie or hobbyist developer around the world.
+I am profoundly sad about this as I enjoyed making fun apps and tools for myself and for my friends, and the freedom that I've been lucky to enjoy for nearly 7 years now will be ripped away from me, and every other Android user around the world. Not just developers.
 
 For more information and to support the cause, please visit [keepandroidopen.org](https://keepandroidopen.org/).

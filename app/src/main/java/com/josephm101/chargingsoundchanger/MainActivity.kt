@@ -347,6 +347,7 @@ class MainActivity : ComponentActivity() {
             ShowDevMessagePreferenceCard()
             //DebounceEnabledPreferenceCard()
             SoundVolumePreferenceCard()
+            PreferencesTextLine("Vibration")
             VibrationEnabledPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled)
             VibrationDurationPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled)
         }

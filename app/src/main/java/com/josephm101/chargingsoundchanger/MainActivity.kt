@@ -722,7 +722,6 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun AppBetaMessageCard() {
         CustomCardWithTitleAndIconAndContent(
-            //title = "This app is in alpha",
             title = stringResource(R.string.ui_alphaBuildNoticeCard_title),
             iconResId = R.drawable.baseline_handyman_24
         ) {
@@ -913,18 +912,7 @@ class MainActivity : ComponentActivity() {
                                 text = stringResource(R.string.request_permission)
                             )
                         }
-                    },
-                    //dismissButton = {
-                    //    TextButton(
-                    //        onClick = {
-                    //            openFilePermissionsAlertDialog.value = false
-                    //        }
-                    //    ) {
-                    //        Text(
-                    //            text = stringResource(R.string.cancel)
-                    //        )
-                    //    }
-                    //},
+                    }
                 )
             }
         }
@@ -1019,18 +1007,7 @@ class MainActivity : ComponentActivity() {
                                     text = stringResource(R.string.ok)
                                 )
                             }
-                        },
-                        //dismissButton = {
-                        //    TextButton(
-                        //        onClick = {
-                        //            openFilePermissionsAlertDialog.value = false
-                        //        }
-                        //    ) {
-                        //        Text(
-                        //            text = stringResource(R.string.cancel)
-                        //        )
-                        //    }
-                        //},
+                        }
                     )
                 }
             }
@@ -1150,12 +1127,9 @@ class MainActivity : ComponentActivity() {
                 testButtonIsEnabled = true
             }
 
-            // Due to a current bug, disable the test button on Android 14 and newer
-            //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    // Send a broadcast to ChargingSoundService to test the sound
                     testChargingSound()
                 },
                 enabled = testButtonIsEnabled
@@ -1164,7 +1138,6 @@ class MainActivity : ComponentActivity() {
                     text = "Test",
                 )
             }
-            //}
             if (testButtonIsEnabled) {
                 Text(
                     text = chargingSoundFileName,

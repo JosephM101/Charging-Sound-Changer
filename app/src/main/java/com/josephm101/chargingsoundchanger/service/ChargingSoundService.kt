@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import com.josephm101.chargingsoundchanger.DoNotDisturb
 import com.josephm101.chargingsoundchanger.MainActivity
 import com.josephm101.chargingsoundchanger.R
+import com.josephm101.chargingsoundchanger.common.VibrationHelper
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import java.io.File
 
@@ -223,6 +224,11 @@ class ChargingSoundService : Service() {
             // Log error
             Log.e(serviceLogTag, "playChargingSound(): could not find the sound file '${servicePreferences.chargingStartedSoundFilePath}'!")
             return // abort playChargingSound()
+        }
+
+        if (servicePreferences.vibrationEnabled) {
+            val vibrationHelper = VibrationHelper(applicationContext)
+            vibrationHelper.vibrateMs(servicePreferences.vibrationLengthMs.toLong())
         }
 
         // Set up a media player that uses the notifications & alerts audio channel

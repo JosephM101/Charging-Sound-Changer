@@ -19,6 +19,7 @@ import android.os.PowerManager
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -33,13 +34,11 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -49,13 +48,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -67,11 +65,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -95,6 +91,9 @@ import com.josephm101.chargingsoundchanger.common.VibrationHelper
 import com.josephm101.chargingsoundchanger.preferences.AppPreferences
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import com.josephm101.chargingsoundchanger.service.ChargingSoundService
+import com.josephm101.chargingsoundchanger.ui.components.card.CardConstants.cardDefaultBodyTextStyle
+import com.josephm101.chargingsoundchanger.ui.components.card.CustomCard.CustomCardWithTitleAndIconAndContent
+import com.josephm101.chargingsoundchanger.ui.components.card.SwitchCard
 import com.josephm101.chargingsoundchanger.ui.theme.BatterySoundChangerTheme
 import java.io.File
 import java.io.InputStream
@@ -135,18 +134,6 @@ data class BottomNavigationItem(
 class MainActivity : ComponentActivity() {
     lateinit var vibrator: VibrationHelper
 
-    // Constants
-    private val cardDefaultBodyTextStyle = TextStyle(fontSize = 13.sp)
-    //private val cardElevation = 4.dp
-    private val cardInnerPadding = 20.dp
-    private val cardOuterPaddingBottom = 16.dp
-    private val cardIconSize = 30.dp
-    private var customCardModifier = Modifier
-        //.size(width = 300.dp, height = 100.dp)
-        .fillMaxWidth()
-        .wrapContentHeight()
-        .padding(bottom = cardOuterPaddingBottom)
-
     private val loopHandler = Handler(Looper.getMainLooper())
     private lateinit var servicePreferences: ServicePreferences
     private lateinit var appPreferences: AppPreferences
@@ -163,6 +150,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun notImplementedToast() {
+        Toast.makeText(applicationContext, "Not implemented", Toast.LENGTH_SHORT).show()
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -170,9 +161,8 @@ class MainActivity : ComponentActivity() {
         // Initialize preferences
         servicePreferences = ServicePreferences(applicationContext)
         appPreferences = AppPreferences(applicationContext)
-        //servicePreferences.sharedPreferences.edit().clear().apply()
 
-        // (Try to) get app version name
+        // (Try to) get app version information
         try {
             val pInfo: PackageInfo = VersionHelper.getAppPackageInfo(applicationContext)
             appVersion = pInfo.versionName
@@ -183,7 +173,6 @@ class MainActivity : ComponentActivity() {
         }
 
         // Initialize vibration component
-        /// TODO: Test vibrator on physical device
         vibrator = VibrationHelper(applicationContext)
 
         // startChargingSoundService() Now handled by PostNotificationPermissionsCard()
@@ -201,9 +190,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
                         /// TODO: Add "More" menu icon button with links to GitHub repo, a link to the "Issues" section, and an "About" dialog with credits
-                        TopAppBar(title = {
-                            Text(stringResource(id = R.string.app_display_name))
-                        })
+                        TopAppBar(
+                            title = {
+                                Text(stringResource(id = R.string.app_display_name))
+                            }
+                        )
                     },
                     bottomBar = {
                         NavigationBar {
@@ -1148,115 +1139,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    @Composable
-    fun CustomColumnWithPaddingForCard(content: @Composable () -> Unit) {
-        Column(
-            modifier = Modifier
-                .padding(cardInnerPadding)
-        ) {
-            content()
-        }
-    }
-
-    @Composable
-    fun SwitchCard(
-        title: String,
-        description: String,
-        booleanValue: Boolean,
-        onCheckedChange: (it: Boolean) -> Unit
-    ) {
-        var checked by remember { mutableStateOf(booleanValue) }
-        OutlinedCard(
-            //elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-            modifier = customCardModifier,
-            onClick = {
-                checked = !checked
-                onCheckedChange(checked)
-            }
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(cardInnerPadding)
-                    .fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .wrapContentHeight()
-                ) {
-                    CardTitleText(text = title)
-                    Spacer(
-                        modifier = Modifier
-                            .size(width = 0.dp, height = 8.dp)
-                    )
-                    Text(
-                        text = description,
-                        style = cardDefaultBodyTextStyle,
-                    )
-                }
-                Switch(
-                    checked = checked,
-                    onCheckedChange = {
-                        checked = it
-                        onCheckedChange(checked)
-                    }
-                )
-            }
-        }
-    }
-
-    @Composable
-    fun CustomCardBase(content: @Composable () -> Unit) {
-        OutlinedCard(
-            //elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
-            modifier = Modifier
-                //.size(width = 300.dp, height = 100.dp)
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(bottom = cardOuterPaddingBottom),
-        ) {
-            content()
-        }
-    }
-
-    @Composable
-    fun CardTitleText(text: String) {
-        val titleTextFontSize = 20.sp
-        Text(
-            text = text,
-            style = TextStyle(fontSize = titleTextFontSize)
-        )
-    }
-
-    @Composable
-    fun CustomCardWithTitleAndIconAndContent(
-        title: String,
-        iconResId: Int,
-        content: @Composable () -> Unit
-    ) {
-        CustomCardBase {
-            CustomColumnWithPaddingForCard {
-                Row(
-                    modifier = Modifier.padding(bottom = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (iconResId != -1) {
-                        Icon(
-                            painter = painterResource(id = iconResId),
-                            modifier = Modifier.size(cardIconSize, cardIconSize),
-                            contentDescription = ""
-                        )
-                        Spacer(modifier = Modifier.size(width = 8.dp, height = 0.dp))
-                    }
-                    CardTitleText(title)
-                }
-                content()
-            }
-        }
-    }
-
 
     @SuppressLint("BatteryLife")
     private fun requestPermissionToIgnoreBatteryOptimization() {

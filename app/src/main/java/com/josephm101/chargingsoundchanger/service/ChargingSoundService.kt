@@ -17,11 +17,10 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import com.josephm101.chargingsoundchanger.DoNotDisturb
 import com.josephm101.chargingsoundchanger.MainActivity
 import com.josephm101.chargingsoundchanger.R
-import com.josephm101.chargingsoundchanger.common.VibrationHelper
+import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import java.io.File
 

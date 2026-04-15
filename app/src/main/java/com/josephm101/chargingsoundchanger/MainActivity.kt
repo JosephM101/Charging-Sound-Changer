@@ -85,9 +85,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.josephm101.chargingsoundchanger.common.LoggerTags
-import com.josephm101.chargingsoundchanger.common.VersionHelper
-import com.josephm101.chargingsoundchanger.common.VibrationHelper
+import com.josephm101.chargingsoundchanger.helpers.VersionHelper
+import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
 import com.josephm101.chargingsoundchanger.preferences.AppPreferences
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import com.josephm101.chargingsoundchanger.service.ChargingSoundService
@@ -129,7 +128,6 @@ data class BottomNavigationItem(
         )
     }
 }
-
 
 class MainActivity : ComponentActivity() {
     lateinit var vibrator: VibrationHelper

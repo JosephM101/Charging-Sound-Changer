@@ -1,4 +1,4 @@
-package com.josephm101.chargingsoundchanger.common
+package com.josephm101.chargingsoundchanger.helpers
 
 import android.content.Context
 import android.content.Context.VIBRATOR_MANAGER_SERVICE

@@ -1,4 +1,4 @@
-package com.josephm101.chargingsoundchanger.common
+package com.josephm101.chargingsoundchanger
 
 object LoggerTags {
     object MainActivity {

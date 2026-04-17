@@ -489,10 +489,10 @@ class MainActivity : ComponentActivity() {
                 .padding(horizontal = 16.dp)
         ) {
             PreferencesTextLine("Advanced settings")
+            SoundVolumePreferenceCard()
             RespectDoNotDisturbPreferenceCard()
             ShowDevMessagePreferenceCard()
             //DebounceEnabledPreferenceCard()
-            SoundVolumePreferenceCard()
             PreferencesTextLine("Vibration")
             VibrationEnabledPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled)
             VibrationDurationPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled)

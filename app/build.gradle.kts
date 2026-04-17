@@ -24,6 +24,10 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            postprocessing {
+                isRemoveUnusedCode = true
+                isRemoveUnusedResources = true
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

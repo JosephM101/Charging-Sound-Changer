@@ -85,18 +85,13 @@ dependencies {
     // Voyager //
 
     // Navigator
-    implementation(libs.voyager.navigator)
 
     // Screen Model
-    implementation(libs.voyager.screenmodel)
 
     // BottomSheetNavigator
-    implementation(libs.voyager.bottom.sheet.navigator)
 
     // TabNavigator
-    implementation(libs.voyager.tab.navigator)
 
     // Transitions
-    implementation(libs.voyager.transitions)
 
 }

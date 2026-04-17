@@ -25,23 +25,30 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -80,10 +87,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.josephm101.chargingsoundchanger.helpers.VersionHelper
 import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
@@ -175,83 +184,227 @@ class MainActivity : ComponentActivity() {
 
         // startChargingSoundService() Now handled by PostNotificationPermissionsCard()
 
+        val useNewNavigationSystem = true
+
         // Setup UI
         enableEdgeToEdge()
         setContent {
             BatterySoundChangerTheme {
-                var navigationSelectedItem by remember {
-                    mutableIntStateOf(0)
-                }
+                //var navigationSelectedItem by remember { mutableIntStateOf(0) }
                 val navController = rememberNavController()
+                val slideTransitionDuration = 600
+                val scaleTransitionScale = 0.9f
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        /// TODO: Add "More" menu icon button with links to GitHub repo, a link to the "Issues" section, and an "About" dialog with credits
-                        TopAppBar(
-                            title = {
-                                Text(stringResource(id = R.string.app_display_name))
+                if (useNewNavigationSystem) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = Screens.Home.route
+                    ) {
+                        composable(
+                            Screens.Home.route,
+                            enterTransition = {
+                                return@composable fadeIn(tween(1000))
+                            }, exitTransition = {
+                                return@composable slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Start,
+                                    tween(slideTransitionDuration)
+                                )
+                            }, popEnterTransition = {
+                                return@composable slideIntoContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.End,
+                                    tween(slideTransitionDuration)
+                                ).plus(scaleIn(tween(slideTransitionDuration), initialScale = scaleTransitionScale))
                             }
-                        )
-                    },
-                    bottomBar = {
-                        NavigationBar {
-                            BottomNavigationItem().bottomNavigationItems()
-                                .forEachIndexed { index, navigationItem ->
-                                    NavigationBarItem(
-                                        selected = index == navigationSelectedItem,
-                                        label = {
-                                            Text(navigationItem.label)
+                        ) {
+                            Scaffold(
+                                modifier = Modifier.fillMaxSize(),
+                                topBar = {
+                                    /// TODO: Add "More" menu icon button with links to GitHub repo, a link to the "Issues" section, and an "About" dialog with credits
+                                    TopAppBar(
+                                        title = {
+                                            Text(stringResource(id = R.string.app_display_name))
                                         },
-                                        icon = {
-                                            Icon(
-                                                navigationItem.icon,
-                                                contentDescription = navigationItem.label
-                                            )
-                                        },
-                                        onClick = {
-                                            navigationSelectedItem = index
-                                            navController.navigate(navigationItem.route) {
-                                                popUpTo(navController.graph.findStartDestination().id) {
-                                                    saveState = true
+                                        actions = {
+                                            IconButton(
+                                                onClick = {
+                                                    navController.navigate(Screens.AdvancedSettings.route) {
+                                                        popUpTo(navController.graph.findStartDestination().id) {
+                                                            saveState = true
+                                                        }
+                                                    }
                                                 }
-                                                launchSingleTop = true
-                                                restoreState = true
+                                            ) {
+                                                Icon(
+                                                    Icons.Filled.Settings,
+                                                    stringResource(R.string.settings_screen_title)
+                                                )
                                             }
                                         }
                                     )
+                                },
+                            ) { innerPadding ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(innerPadding)
+                                ) {
+                                    MainAppContent(navController)
                                 }
+                            }
+                        }
+                        composable(
+                            Screens.AdvancedSettings.route,
+                            enterTransition = {
+                                return@composable slideIntoContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Start,
+                                    tween(slideTransitionDuration)
+                                ).plus(scaleIn(tween(slideTransitionDuration), initialScale = scaleTransitionScale))
+                            },
+                            popExitTransition = {
+                                return@composable slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.End,
+                                    tween(slideTransitionDuration)
+                                ).plus(scaleOut(tween(slideTransitionDuration), targetScale = scaleTransitionScale))
+                            },
+                        ) {
+                            Scaffold(
+                                modifier = Modifier.fillMaxSize(),
+                                topBar = {
+                                    TopAppBar(
+                                        title = {
+                                            Text(stringResource(id = R.string.settings_screen_title))
+                                        },
+                                        navigationIcon = {
+                                            IconButton(
+                                                onClick = {
+                                                    if (navController.previousBackStackEntry != null) {
+                                                        navController.navigateUp()
+                                                    }
+                                                }
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                    contentDescription = "Back"
+                                                )
+                                            }
+                                        }
+                                    )
+                                },
+                            ) { innerPadding ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(innerPadding)
+                                ) {
+                                    AdvancedSettingsScreen(navController)
+                                }
+                            }
                         }
                     }
-                ) { innerPadding ->
-                    val transitionDurationMs = 200
-                    val transitionIn = fadeIn(animationSpec = tween(transitionDurationMs))
-                    val transitionOut = fadeOut(animationSpec = tween(transitionDurationMs))
-
-                    NavHost(
-                        navController,
-                        startDestination = Screens.Home.route,
-                        Modifier.padding(innerPadding),
-                        //enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(200)) },
-                        //exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(200)) },
-                        //popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(200)) },
-                        //popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(200)) }
-
-                        enterTransition = { transitionIn },
-                        exitTransition = { transitionOut },
-                        popEnterTransition = { transitionIn },
-                        popExitTransition = { transitionOut }
-                    ) {
-                        composable(Screens.Home.route) {
-                            MainAppContent(navController)
+                } else {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        topBar = {
+                            /// TODO: Add "More" menu icon button with links to GitHub repo, a link to the "Issues" section, and an "About" dialog with credits
+                            TopAppBar(
+                                title = {
+                                    Text(stringResource(id = R.string.app_display_name))
+                                }
+                            )
+                        },
+                        bottomBar = {
+                            NavigationBar {
+                                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                                val currentDestination = navBackStackEntry?.destination
+                                BottomNavigationItem().bottomNavigationItems()
+                                    .forEachIndexed { index, navigationItem ->
+                                        NavigationBarItem(
+                                            //selected = index == navigationSelectedItem,
+                                            selected = currentDestination?.hierarchy?.any { it.route == navigationItem.route } == true,
+                                            label = {
+                                                Text(navigationItem.label)
+                                            },
+                                            icon = {
+                                                Icon(
+                                                    navigationItem.icon,
+                                                    contentDescription = navigationItem.label
+                                                )
+                                            },
+                                            onClick = {
+                                                //navigationSelectedItem = index
+                                                navController.navigate(navigationItem.route) {
+                                                    popUpTo(navController.graph.findStartDestination().id) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        )
+                                    }
+                            }
                         }
-                        composable(Screens.AdvancedSettings.route) {
-                            AdvancedSettingsScreen(navController)
+                    ) { innerPadding ->
+                        val transitionDurationMs = 300
+                        val transitionIn = fadeIn(animationSpec = tween(transitionDurationMs))
+                        val transitionOut = fadeOut(animationSpec = tween(transitionDurationMs))
+
+                        NavHost(
+                            navController,
+                            startDestination = Screens.Home.route,
+                            Modifier.padding(innerPadding),
+                            //enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(200)) },
+                            //exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(200)) },
+                            //popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(200)) },
+                            //popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(200)) }
+
+                            enterTransition = { transitionIn },
+                            exitTransition = { transitionOut },
+                            popEnterTransition = { transitionIn },
+                            popExitTransition = { transitionOut }
+                        ) {
+                            composable(
+                                Screens.Home.route,
+                                /*
+                                popEnterTransition = {
+                                    return@composable slideIntoContainer(
+                                        AnimatedContentTransitionScope.SlideDirection.End,
+                                        tween(slideTransitionDuration)
+                                    )
+                                },
+                                exitTransition = {
+                                    return@composable slideOutOfContainer(
+                                        AnimatedContentTransitionScope.SlideDirection.Start,
+                                        tween(slideTransitionDuration)
+                                    )
+                                }
+                                 */
+                            ) {
+                                MainAppContent(navController)
+                            }
+                            composable(
+                                Screens.AdvancedSettings.route,
+                                /*
+                                enterTransition = {
+                                    return@composable slideIntoContainer(
+                                        AnimatedContentTransitionScope.SlideDirection.Start,
+                                        tween(slideTransitionDuration)
+                                    )//.plus(scaleIn(tween(slideTransitionDuration), initialScale = scaleTransitionScale))
+                                },
+                                popExitTransition = {
+                                    return@composable slideOutOfContainer(
+                                        AnimatedContentTransitionScope.SlideDirection.End,
+                                        tween(slideTransitionDuration)
+                                    )//.plus(scaleOut(tween(slideTransitionDuration), targetScale = scaleTransitionScale))
+                                }
+                                 */
+                            ) {
+                                AdvancedSettingsScreen(navController)
+                            }
                         }
                     }
-
-                    AndroidFreedomWarningDialog()
                 }
+                AndroidFreedomWarningDialog()
             }
         }
     }
@@ -320,6 +473,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun AdvancedSettingsScreen(navController: NavHostController) {
         val vibrationDurationPreferenceCardShouldBeEnabled =

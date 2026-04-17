@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">Charging Sound Changer</string>
     <string name="app_display_name" translatable="false">Charging Sound Changer</string>
+    <string name="settings_screen_title">Settings</string>
 
     <string name="ok" translatable="false">OK</string>
     <string name="cancel">Cancel</string>

@@ -1,16 +1,21 @@
 package com.josephm101.chargingsoundchanger.ui.components.card
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -21,8 +26,31 @@ import com.josephm101.chargingsoundchanger.ui.components.card.CardConstants.card
 
 object CustomCard {
     @Composable
-    fun CustomCardBase(content: @Composable () -> Unit) {
+    fun CustomCardBase(cardContainerColor: Color? = null, content: @Composable () -> Unit) {
         OutlinedCard(
+            colors = if (cardContainerColor != null) {
+                CardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = CardDefaults.outlinedCardColors().contentColor,
+                    disabledContainerColor = CardDefaults.outlinedCardColors().disabledContainerColor,
+                    disabledContentColor = CardDefaults.outlinedCardColors().disabledContentColor,
+                )
+            } else {
+                CardColors(
+                    containerColor = CardDefaults.outlinedCardColors().containerColor,
+                    contentColor = CardDefaults.outlinedCardColors().contentColor,
+                    disabledContainerColor = CardDefaults.outlinedCardColors().disabledContainerColor,
+                    disabledContentColor = CardDefaults.outlinedCardColors().disabledContentColor,
+                )
+            },
+                    /*
+                    colors = CardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = CardDefaults.outlinedCardColors().contentColor,
+                        disabledContainerColor = CardDefaults.outlinedCardColors().disabledContainerColor,
+                        disabledContentColor = CardDefaults.outlinedCardColors().disabledContentColor,
+                    ),
+                     */
             //elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
             modifier = cardDefaultModifier
         ) {
@@ -53,9 +81,10 @@ object CustomCard {
     fun CustomCardWithTitleAndIconAndContent(
         title: String,
         iconResId: Int,
-        content: @Composable () -> Unit
+        cardContainerColor: Color? = null,
+        content: @Composable () -> Unit,
     ) {
-        CustomCardBase {
+        CustomCardBase(cardContainerColor = cardContainerColor) {
             CustomColumnWithPaddingForCard {
                 Row(
                     modifier = Modifier.padding(bottom = 12.dp),

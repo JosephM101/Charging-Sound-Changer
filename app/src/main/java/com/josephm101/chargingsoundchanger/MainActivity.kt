@@ -53,6 +53,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,6 +66,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -619,7 +622,8 @@ class MainActivity : ComponentActivity() {
             ) {
                 CustomCardWithTitleAndIconAndContent(
                     title = stringResource(R.string.ui_notificationPermissionsRequired_dialogTitle),
-                    iconResId = R.drawable.baseline_notifications_24
+                    iconResId = R.drawable.baseline_notifications_24,
+                    //cardContainerColor = MaterialTheme.colorScheme.errorContainer
                 ) {
                     Text(
                         text = stringResource(R.string.ui_notificationPermissionsRequired_dialogBody),
@@ -738,7 +742,8 @@ class MainActivity : ComponentActivity() {
         ) {
             CustomCardWithTitleAndIconAndContent(
                 title = stringResource(R.string.ui_batteryOptimizationsCard_title),
-                iconResId = R.drawable.baseline_battery_saver_24
+                iconResId = R.drawable.baseline_battery_saver_24,
+                //cardContainerColor = MaterialTheme.colorScheme.errorContainer
             ) {
                 Text(
                     text = stringResource(R.string.ui_batteryOptimizationsCard_description),
@@ -747,6 +752,14 @@ class MainActivity : ComponentActivity() {
                 Spacer(modifier = Modifier.size(width = 0.dp, height = 12.dp))
                 Button(
                     modifier = Modifier.fillMaxWidth(),
+                    /*
+                    colors = ButtonColors(
+                        containerColor = MaterialTheme.colorScheme.contentColorFor(MaterialTheme.colorScheme.errorContainer),
+                        contentColor = ButtonDefaults.buttonColors().contentColor,
+                        disabledContainerColor = ButtonDefaults.buttonColors().disabledContainerColor,
+                        disabledContentColor = ButtonDefaults.buttonColors().disabledContentColor
+                    ),
+                     */
                     onClick = {
                         requestPermissionToIgnoreBatteryOptimization()
                     }

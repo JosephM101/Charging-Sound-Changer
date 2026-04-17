@@ -216,7 +216,12 @@ class MainActivity : ComponentActivity() {
                                 return@composable slideIntoContainer(
                                     AnimatedContentTransitionScope.SlideDirection.End,
                                     tween(slideTransitionDuration)
-                                ).plus(scaleIn(tween(slideTransitionDuration), initialScale = scaleTransitionScale))
+                                ).plus(
+                                    scaleIn(
+                                        tween(slideTransitionDuration),
+                                        initialScale = scaleTransitionScale
+                                    )
+                                )
                             }
                         ) {
                             Scaffold(
@@ -261,13 +266,23 @@ class MainActivity : ComponentActivity() {
                                 return@composable slideIntoContainer(
                                     AnimatedContentTransitionScope.SlideDirection.Start,
                                     tween(slideTransitionDuration)
-                                ).plus(scaleIn(tween(slideTransitionDuration), initialScale = scaleTransitionScale))
+                                ).plus(
+                                    scaleIn(
+                                        tween(slideTransitionDuration),
+                                        initialScale = scaleTransitionScale
+                                    )
+                                )
                             },
                             popExitTransition = {
                                 return@composable slideOutOfContainer(
                                     AnimatedContentTransitionScope.SlideDirection.End,
                                     tween(slideTransitionDuration)
-                                ).plus(scaleOut(tween(slideTransitionDuration), targetScale = scaleTransitionScale))
+                                ).plus(
+                                    scaleOut(
+                                        tween(slideTransitionDuration),
+                                        targetScale = scaleTransitionScale
+                                    )
+                                )
                             },
                         ) {
                             Scaffold(

@@ -85,17 +85,4 @@ dependencies {
     ksp(libs.moshi.kotlin.codegen)
     implementation("androidx.compose.material:material-icons-extended:1.5.1")
     implementation("androidx.navigation:navigation-compose:2.4.0-alpha01")
-
-    // Voyager //
-
-    // Navigator
-
-    // Screen Model
-
-    // BottomSheetNavigator
-
-    // TabNavigator
-
-    // Transitions
-
 }

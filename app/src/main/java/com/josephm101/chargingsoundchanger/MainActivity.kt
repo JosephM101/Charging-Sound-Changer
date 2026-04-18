@@ -1155,6 +1155,7 @@ class MainActivity : ComponentActivity() {
             var chargingSoundFileName by remember { mutableStateOf(servicePreferences.chargingStartedSoundFileName) }
             var testButtonIsEnabled by remember { mutableStateOf(servicePreferences.chargingStartedSoundFileName.isNotEmpty()) }
             val showFileOpenErrorDialog = remember { mutableStateOf(false) }
+            var fileOpenErrorDialogMessageTitle by remember { mutableStateOf(getString(R.string.ui_soundChooser_errorOpeningFile_dialogTitle)) }
             var fileOpenErrorDialogMessageBodyText by remember { mutableStateOf("") }
 
             when {
@@ -1164,7 +1165,7 @@ class MainActivity : ComponentActivity() {
                             showFileOpenErrorDialog.value = false
                         },
                         title = {
-                            Text(text = stringResource(R.string.ui_soundChooser_errorOpeningFile_dialogTitle))
+                            Text(text = fileOpenErrorDialogMessageTitle)
                         },
                         text = {
                             Text(text = fileOpenErrorDialogMessageBodyText)
@@ -1253,6 +1254,7 @@ class MainActivity : ComponentActivity() {
                             R.string.dialog_soundChooser_errorOpeningFile_durationTooLongMessage,
                             maxSoundDurationInSeconds
                         )
+                    fileOpenErrorDialogMessageTitle = "Sound length too long"
                     showFileOpenErrorDialog.value = true
                     return@SoundFilePicker // Sound duration is too long
                 }

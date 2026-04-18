@@ -919,7 +919,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun VibrationEnabledPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled: MutableState<Boolean>) {
         SwitchCard(
-            title = "Enable vibration",
+            title = "Enable vibration (Experimental)",
             description = "Vibrate when charging begins",
             booleanValue = servicePreferences.vibrationEnabled,
             onCheckedChange = { value ->

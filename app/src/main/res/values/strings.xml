@@ -36,6 +36,9 @@
     <string name="ui_soundEnabledPreferenceCard_title">Sound enabled</string>
     <string name="ui_soundEnabledPreferenceCard_description">Enable/disable charging sound</string>
 
+    <string name="ui_vibrationEnabledPreferenceCard_title">Enable vibration (Experimental)</string>
+    <string name="ui_vibrationEnabledPreferenceCard_description">Vibrate when charging begins</string>
+
     <string name="ui_debounceEnabledPreferenceCard_title">Enable debounce</string>
     <string name="ui_debounceEnabledPreferenceCard_description">Turn this on if the sound plays more than once when charging begins.</string>
 

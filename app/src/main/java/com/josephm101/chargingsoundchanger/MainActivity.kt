@@ -5,8 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.media.AudioAttributes
-import android.media.AudioManager
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
@@ -94,6 +92,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.josephm101.chargingsoundchanger.helpers.VersionHelper
 import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
+import com.josephm101.chargingsoundchanger.helpers.getChargingSoundAudioAttributes
 import com.josephm101.chargingsoundchanger.preferences.AppPreferences
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import com.josephm101.chargingsoundchanger.service.ChargingSoundService
@@ -1115,15 +1114,7 @@ class MainActivity : ComponentActivity() {
 
         // Set up a media player that uses the notifications & alerts audio channel
         val mediaPlayer = MediaPlayer()
-        mediaPlayer.setAudioAttributes(
-            AudioAttributes.Builder()
-                //.setFlags(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                //.setLegacyStreamType(AudioManager.STREAM_RING)
-                //.setLegacyStreamType(AudioManager.STREAM_NOTIFICATION)
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-        )
+        mediaPlayer.setAudioAttributes(getChargingSoundAudioAttributes())
         Log.d(LoggerTags.MainActivity.DEFAULT, "testChargingSound(): Created media player")
 
         // Load the sound file and prepare the media player

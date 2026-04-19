@@ -21,6 +21,7 @@ import com.josephm101.chargingsoundchanger.DoNotDisturb
 import com.josephm101.chargingsoundchanger.MainActivity
 import com.josephm101.chargingsoundchanger.R
 import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
+import com.josephm101.chargingsoundchanger.helpers.getChargingSoundAudioAttributes
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import java.io.File
 
@@ -232,15 +233,7 @@ class ChargingSoundService : Service() {
 
         // Set up a media player that uses the notifications & alerts audio channel
         val mediaPlayer = MediaPlayer()
-        mediaPlayer.setAudioAttributes(
-            AudioAttributes.Builder()
-                //.setFlags(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                //.setLegacyStreamType(AudioManager.STREAM_RING)
-                //.setLegacyStreamType(AudioManager.STREAM_NOTIFICATION)
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-        )
+        mediaPlayer.setAudioAttributes(getChargingSoundAudioAttributes())
         Log.d(serviceLogTag, "playChargingSound(): Created media player")
 
         // Load the sound file and prepare the media player

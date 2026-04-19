@@ -234,10 +234,10 @@ class ChargingSoundService : Service() {
         val mediaPlayer = MediaPlayer()
         mediaPlayer.setAudioAttributes(
             AudioAttributes.Builder()
-                .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
+                //.setFlags(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                 //.setLegacyStreamType(AudioManager.STREAM_RING)
-                .setLegacyStreamType(AudioManager.STREAM_NOTIFICATION)
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                //.setLegacyStreamType(AudioManager.STREAM_NOTIFICATION)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
         )

@@ -499,7 +499,7 @@ class MainActivity : ComponentActivity() {
         ) {
             PreferencesTextLine("Advanced settings")
             SoundVolumePreferenceCard()
-            RespectDoNotDisturbPreferenceCard()
+            //RespectDoNotDisturbPreferenceCard()
             ShowDevMessagePreferenceCard()
             //DebounceEnabledPreferenceCard()
             PreferencesTextLine("Vibration")

@@ -3,10 +3,13 @@ package com.josephm101.chargingsoundchanger.helpers.soundmanager
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.os.Build
 import android.util.Log
+import androidx.core.content.ContextCompat.createAttributionContext
 import com.josephm101.chargingsoundchanger.DoNotDisturb
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import java.io.File
+
 
 class SoundManager {
     companion object {
@@ -36,8 +39,7 @@ class SoundManager {
         logTag: String = "SoundManager",
         logMessagePrefix: String? = "playSound()",
         ignoreSoundEnableSetting: Boolean = false
-    )
-            : SoundPlaybackResult {
+    ): SoundPlaybackResult {
 
         val uniqueCallID = (100..500).random()
         fun makeLogMessage(message: String): String {
@@ -117,6 +119,7 @@ class SoundManager {
         mediaPlayer.start()
         mediaPlayer.setOnCompletionListener {
             Log.i(logTag, makeLogMessage("Playback complete"))
+            mediaPlayer.release() // Release resources associated with the media player
         }
 
         return SoundPlaybackResult.Success

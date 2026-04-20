@@ -59,9 +59,13 @@
     <string name="keepAndroidOpenWarning_DialogTitle" translatable="false">Keep Android Open</string>
     <string name="keepAndroidOpenWarning_OpenWebpageButtonText" translatable="false">Keep Android Open!</string>
     <string name="keepAndroidOpenURL" translatable="false">https://keepandroidopen.org/</string>
+
     <string name="ui_notificationPermissionsRequired_dialogBody">On Android 13 and later, notification permissions are required for foreground services. Don\'t worry, we\'re not going to bombard you with alerts. This is necessary to reduce the chance that the app\'s service will be terminated by Android.</string>
     <string name="ui_notificationPermissionsRequired_dialogTitle">Notification permissions required</string>
     <string name="request_permissions">Request Permissions</string>
+    <string name="ui_notificationPermissionsRationale_dialogBody">Notification permissions are required for the sound service to function properly in the background. Please allow these permissions in Settings.</string>
+    <string name="ui_notificationPermissionsRationale_dialogTitle">Notification Permission</string>
     <string name="open_android_settings_for_this_app">Open Android Settings for this app</string>
+    <string name="open_settings">Open Settings</string>
 
 </resources>

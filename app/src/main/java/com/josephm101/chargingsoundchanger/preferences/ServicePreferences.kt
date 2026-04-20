@@ -20,7 +20,7 @@ class ServicePreferences(context: Context) : SimpleKrate(context) {
 
     var chargingStoppedSoundFilePath by stringPref().withDefault("")
     var chargingStoppedSoundFileName by stringPref().withDefault("")
-    var chargingStoppedSoundPlaybackVolume by floatPref().withDefault(1.0f) // Sets how loud the sound will be when played (0.0f to 1.0f)
+    //var chargingStoppedSoundPlaybackVolume by floatPref().withDefault(1.0f) // Sets how loud the sound will be when played (0.0f to 1.0f)
     var chargingStoppedSoundEnabled by booleanPref().withDefault(false)
 
     // If enabled, device will vibrate for an amount of time (defined by vibrationLengthMs) when charging begins.
@@ -32,9 +32,9 @@ class ServicePreferences(context: Context) : SimpleKrate(context) {
     // When sound is played, wait a preset amount of time before it's possible to play the sound again.
     // May be useful for devices with finicky chargers, connections, etc.
     /// TODO: debounceEnabled should be implemented
-    var debounceEnabled by booleanPref().withDefault(false)
+    //var debounceEnabled by booleanPref().withDefault(false)
 
     // If Do Not Disturb is enabled, the sound and vibration will not play.
     // This replicates default Android behavior.
-    var respectDoNotDisturb by booleanPref().withDefault(true)
+    //var respectDoNotDisturb by booleanPref().withDefault(true)
 }

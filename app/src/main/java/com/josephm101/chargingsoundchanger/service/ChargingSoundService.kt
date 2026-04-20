@@ -9,21 +9,17 @@ import android.content.Intent
 import android.content.Intent.ACTION_POWER_CONNECTED
 import android.content.Intent.ACTION_POWER_DISCONNECTED
 import android.content.IntentFilter
-import android.media.AudioAttributes
-import android.media.AudioManager
-import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import com.josephm101.chargingsoundchanger.DoNotDisturb
 import com.josephm101.chargingsoundchanger.MainActivity
 import com.josephm101.chargingsoundchanger.R
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.Sounds
 import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
-import com.josephm101.chargingsoundchanger.helpers.getChargingSoundAudioAttributes
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
-import java.io.File
 
 /* A developer's note:
 
@@ -46,7 +42,10 @@ class ChargingSoundService : Service() {
      */
     private val showDebugToasts = false
 
-    val serviceLogTag = "ChargingSoundService" // This is the logging tag that we use for Log.[d/i/w/e]()
+    val soundManager = SoundManager()
+
+    val serviceLogTag =
+        "ChargingSoundService" // This is the logging tag that we use for Log.[d/i/w/e]()
 
     /*
     To ensure this service's survival after we start it (quite a battle in Android), we create a persistent
@@ -71,15 +70,16 @@ class ChargingSoundService : Service() {
      */
     private val onChargingStatusChangedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            /// TODO: If planning to add a "play sound on charger disconnected" feature, add code to run action based on the message we received (ACTION_POWER_[DIS]CONNECTED)
             when (intent.action) {
                 ACTION_POWER_CONNECTED -> {
                     Log.i(serviceLogTag, "Received \"ACTION_POWER_CONNECTED\"")
-                    playChargingSound()
+                    playChargingStartedSound()
                 }
+
                 ACTION_POWER_DISCONNECTED -> {
                     Log.i(serviceLogTag, "Received \"ACTION_POWER_DISCONNECTED\" (not handled yet)")
-                    //playChargingSound()
+                    /// TODO: When UI is implemented for choosing a "charging stopped" sound, uncomment this line
+                    //playChargingStoppedSound()
                 }
             }
         }
@@ -108,8 +108,14 @@ class ChargingSoundService : Service() {
             addAction(ACTION_POWER_CONNECTED) // Subscribe to alerts when power is connected
             addAction(ACTION_POWER_DISCONNECTED) // Subscribe to alerts when power is disconnected
         }
-        this.registerReceiver(onChargingStatusChangedReceiver, intentFilter) // Register our IntentFilter with the BroadcastReceiver
-        Log.i(serviceLogTag, "INIT: Registered receiver (onChargingStatusChangedReceiver)") // Log what we've done
+        this.registerReceiver(
+            onChargingStatusChangedReceiver,
+            intentFilter
+        ) // Register our IntentFilter with the BroadcastReceiver
+        Log.i(
+            serviceLogTag,
+            "INIT: Registered receiver (onChargingStatusChangedReceiver)"
+        ) // Log what we've done
 
 
         // Create a notification channel for our persistent service notification (required for Android 8 Oreo and later; keeps Android from just nuking it when resources are low)
@@ -138,15 +144,19 @@ class ChargingSoundService : Service() {
         )
 
         /* A PendingIntent allows us to trigger a regular intent at a later time. This is what we'll give to our notification. */
-        val pendingIntent = PendingIntent.getActivity( // Create a PendingIntent that wraps notificationIntent
-            this,
-            0,
-            notificationIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
+        val pendingIntent =
+            PendingIntent.getActivity( // Create a PendingIntent that wraps notificationIntent
+                this,
+                0,
+                notificationIntent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
 
         /* Now we'll build the notification */
-        val notification = NotificationCompat.Builder(this, persistentNotificationChannelID) // Create notification builder, assign channel ID
+        val notification = NotificationCompat.Builder(
+            this,
+            persistentNotificationChannelID
+        ) // Create notification builder, assign channel ID
             .setSmallIcon(R.drawable.baseline_battery_charging_full_24) // Set notification icon
             .setContentText(getString(R.string.service_notification_notification_content_text)) // Set the notification content (body) text
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -167,7 +177,7 @@ class ChargingSoundService : Service() {
         TODO("A bind to service was attempted. onBind is not (yet) implemented")
     }
 
-/*
+    /*
     override fun onTaskRemoved(rootIntent: Intent) {
         val restartServiceIntent = Intent(applicationContext, this.javaClass)
         restartServiceIntent.setPackage(packageName)
@@ -190,62 +200,39 @@ class ChargingSoundService : Service() {
         Log.w(serviceLogTag, "Service was destroyed!")
 
         unregisterReceiver(onChargingStatusChangedReceiver)
-        //unregisterReceiver(onSoundTestRequestedReceiver)
     }
 
 
     /* This is the magic! */
-    /// TODO: Look into moving this function (and the corresponding testChargingSound() function in MainActivity) into a single object for consistency
-    fun playChargingSound() {
+    fun playChargingStartedSound() {
         // Load the user preferences for the service
         val servicePreferences = ServicePreferences(applicationContext)
 
-        // If the "charging sound enabled" setting is disabled, do not play the charging sound.
-        if (!servicePreferences.soundsEnabled) {
-            Log.d(serviceLogTag, "playChargingSound(): chargingSoundEnabled=false, not playing sound")
-            return // abort playChargingSound()
-        }
-
-        // If Do-Not-Disturb is enabled, do not play the charging sound.
-        if (servicePreferences.respectDoNotDisturb) {
-            // Check if DND is enabled
-            if (DoNotDisturb.isDndEnabled(applicationContext)){
-                Log.d(serviceLogTag, "playChargingSound(): DND is enabled, and we are respecting DND settings. Not playing sound")
-                return // abort playChargingSound()
-            }
-        }
-
-        // Set playback volume from preferences.
-        val playbackVolume = servicePreferences.chargingStartedSoundPlaybackVolume
-
-        // First check to make sure that the sound file exists
-        val soundFile = File(servicePreferences.chargingStartedSoundFilePath)
-        if (!soundFile.exists()) {
-            // Log error
-            Log.e(serviceLogTag, "playChargingSound(): could not find the sound file '${servicePreferences.chargingStartedSoundFilePath}'!")
-            return // abort playChargingSound()
-        }
-
+        // If vibration is enabled, vibrate the device
         if (servicePreferences.vibrationEnabled) {
             val vibrationHelper = VibrationHelper(applicationContext)
             vibrationHelper.vibrateMs(servicePreferences.vibrationLengthMs.toLong())
         }
 
-        // Set up a media player that uses the notifications & alerts audio channel
-        val mediaPlayer = MediaPlayer()
-        mediaPlayer.setAudioAttributes(getChargingSoundAudioAttributes())
-        Log.d(serviceLogTag, "playChargingSound(): Created media player")
+        soundManager.playSound(
+            context = applicationContext,
+            servicePreferences = servicePreferences,
+            soundToPlay = Sounds.ChargingStartedSound,
+            logTag = serviceLogTag,
+            logMessagePrefix = "playChargingStartedSound()"
+        )
+    }
 
-        // Load the sound file and prepare the media player
-        mediaPlayer.setDataSource(soundFile.absolutePath)
-        mediaPlayer.prepare()
-        Log.d(serviceLogTag, "playChargingSound(): Loaded audio asset")
+    fun playChargingStoppedSound() {
+        // Load the user preferences for the service
+        val servicePreferences = ServicePreferences(applicationContext)
 
-        // Set playback volume
-        mediaPlayer.setVolume(playbackVolume, playbackVolume)
-
-        // Play the sound!
-        Log.i(serviceLogTag, "playChargingSound(): playing audio")
-        mediaPlayer.start()
+        soundManager.playSound(
+            context = applicationContext,
+            servicePreferences = servicePreferences,
+            soundToPlay = Sounds.ChargingStoppedSound,
+            logTag = serviceLogTag,
+            logMessagePrefix = "playChargingStoppedSound()"
+        )
     }
 }

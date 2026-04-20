@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
-import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -90,9 +89,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.Sounds
 import com.josephm101.chargingsoundchanger.helpers.VersionHelper
 import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
-import com.josephm101.chargingsoundchanger.helpers.getChargingSoundAudioAttributes
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundPlaybackResult
 import com.josephm101.chargingsoundchanger.preferences.AppPreferences
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import com.josephm101.chargingsoundchanger.service.ChargingSoundService
@@ -144,6 +145,8 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var appVersion: String
     private var appVersionCode: Long = 0
+
+    val chargingSoundManager = SoundManager()
 
     private fun startChargingSoundService() {
         // Start ChargingSoundService
@@ -604,6 +607,7 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
+            // Request notification permissions
             val launcher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission(),
                 onResult = { isGranted ->
@@ -682,10 +686,10 @@ class MainActivity : ComponentActivity() {
                             showRationaleDialog.value = false
                         },
                         title = {
-                            Text(text = "Notification Permission")
+                            Text(text = stringResource(R.string.ui_notificationPermissionsRationale_dialogTitle))
                         },
                         text = {
-                            Text("Post notification permissions are required for the service to function properly in the background. Please allow these permissions in Settings.")
+                            Text(stringResource(R.string.ui_notificationPermissionsRationale_dialogBody))
                         },
                         confirmButton = {
                             TextButton(
@@ -697,7 +701,7 @@ class MainActivity : ComponentActivity() {
                                     startActivity(intent)
                                 },
                             ) {
-                                Text("Open Settings")
+                                Text(stringResource(R.string.open_settings))
                             }
                         },
                         dismissButton = {
@@ -706,7 +710,7 @@ class MainActivity : ComponentActivity() {
                                     showRationaleDialog.value = false
                                 }
                             ) {
-                                Text("Cancel")
+                                Text(stringResource(R.string.cancel))
                             }
                         }
                     )
@@ -958,6 +962,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /*
     @Composable
     fun DebounceEnabledPreferenceCard() {
         SwitchCard(
@@ -969,7 +974,9 @@ class MainActivity : ComponentActivity() {
             }
         )
     }
+     */
 
+    /*
     @Composable
     fun RespectDoNotDisturbPreferenceCard() {
         SwitchCard(
@@ -981,6 +988,7 @@ class MainActivity : ComponentActivity() {
             }
         )
     }
+     */
 
     @Composable
     fun ShowDevMessagePreferenceCard() {
@@ -1098,36 +1106,18 @@ class MainActivity : ComponentActivity() {
     }
 
     fun testChargingSound() {
-        // Set playback volume from preferences.
-        val playbackVolume = servicePreferences.chargingStartedSoundPlaybackVolume
+        val result = chargingSoundManager.playSound(
+            context = applicationContext,
+            servicePreferences = servicePreferences,
+            soundToPlay = Sounds.ChargingStartedSound,
+            logTag = LoggerTags.MainActivity.DEFAULT,
+            logMessagePrefix = "testChargingSound()"
+        )
 
-        // First check to make sure that the sound file exists
-        val soundFile = File(servicePreferences.chargingStartedSoundFilePath)
-        if (!soundFile.exists()) {
-            // Log error
-            Log.e(
-                LoggerTags.MainActivity.DEFAULT,
-                "testChargingSound(): could not find the sound file '${servicePreferences.chargingStartedSoundFilePath}'!"
-            )
-            return // abort testChargingSound()
+        if (result == SoundPlaybackResult.DoNotDisturbIsEnabled) {
+            Toast.makeText(applicationContext, "Do Not Disturb is enabled", Toast.LENGTH_SHORT)
+                .show()
         }
-
-        // Set up a media player that uses the notifications & alerts audio channel
-        val mediaPlayer = MediaPlayer()
-        mediaPlayer.setAudioAttributes(getChargingSoundAudioAttributes())
-        Log.d(LoggerTags.MainActivity.DEFAULT, "testChargingSound(): Created media player")
-
-        // Load the sound file and prepare the media player
-        mediaPlayer.setDataSource(soundFile.absolutePath)
-        mediaPlayer.prepare()
-        Log.d(LoggerTags.MainActivity.DEFAULT, "testChargingSound(): Loaded audio asset")
-
-        // Set playback volume
-        mediaPlayer.setVolume(playbackVolume, playbackVolume)
-
-        // Play the sound!
-        Log.i(LoggerTags.MainActivity.DEFAULT, "testChargingSound(): playing audio")
-        mediaPlayer.start()
     }
 
     @SuppressLint("Range")
@@ -1312,7 +1302,8 @@ class MainActivity : ComponentActivity() {
     private fun requestPermissionToIgnoreBatteryOptimization() {
         startActivity(
             Intent(
-                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, "package:$packageName".toUri()
+                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                "package:$packageName".toUri()
             )
         )
     }
@@ -1324,7 +1315,7 @@ class MainActivity : ComponentActivity() {
         return pm.isIgnoringBatteryOptimizations(packageName)
     }
 
-    /// TODO: Random thought, but it would probably be wiser to move the permissions requests to a separate paginated activity, and have that activity run before the main activity when any required permissions aren't yet granted. That way, the service wouldn't be started until every required permission has been granted. Plus, having them be full-screen might emphasize their importance.
+    /// TODO: Random thought, but it might be wiser to move the permissions requests to a separate paginated activity, and have that activity run before the main activity when any required permissions aren't yet granted. That way, the service wouldn't be started until every required permission has been granted. Plus, having them be full-screen might emphasize their importance.
 
     private fun requestPermissionToAccessExternalStorage() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { // If running on Android 11 or newer, request MANAGER_EXTERNAL_STORAGE permission

@@ -10,6 +10,8 @@ Minimum OS: Android 6 (Marshmallow), SDK 23
 
 This app supports (and has been tested with) WAV and MP3 files with a 5-second duration limit.
 
+**Proudly written with love, and _without_ "AI" :)**
+
 ## How to use
 This app effectively replaces Android's built-in sound that plays when a device is plugged in. Before enabling this app, you should disable your device's built-in functionality.
 

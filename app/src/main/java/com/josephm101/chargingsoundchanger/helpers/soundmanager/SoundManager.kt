@@ -11,6 +11,10 @@ import java.io.File
 
 class SoundManager {
     companion object {
+        /**
+         * Returns a new, preset instance of AudioAttributes configured to play sounds using Android's notification sound channel
+         * Used by default for playSound()
+         */
         fun getChargingSoundDefaultAudioAttributes(): AudioAttributes {
             return AudioAttributes.Builder()
                 //.setFlags(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
@@ -21,8 +25,16 @@ class SoundManager {
                 .build()
         }
 
-        val maxSoundDurationInSeconds = 5
-        val maxSoundDurationInMilliseconds = maxSoundDurationInSeconds * 1000
+        /**
+         * The maximum length, in seconds, that a user-selected sound can be
+         */
+        const val MAX_SOUND_DURATION_IN_SECONDS = 5
+
+        /**
+         * The maximum length, in milliseconds, that a user-selected sound can be.
+         * Automatically calculated using MAX_SOUND_DURATION_IN_SECONDS
+         */
+        const val MAX_SOUND_DURATION_IN_MILLISECONDS = MAX_SOUND_DURATION_IN_SECONDS * 1000
     }
 
     /**
@@ -41,11 +53,15 @@ class SoundManager {
         logMessagePrefix: String? = "playSound()",
         ignoreSoundEnableSetting: Boolean = false
     ): SoundPlaybackResult {
+        val uniqueCallID = (100..500).random() // Assign this sound playback request with a unique ID for logging purposes
 
-        val uniqueCallID = (100..500).random()
         fun makeLogMessage(message: String): String {
-            val root = "[$uniqueCallID] $message"
-            return logMessagePrefix?.ifBlank { null }?.let { "$it: $root" } ?: root
+            // Merge the uniqueCallID and log message together
+            val logMessageBody = "[$uniqueCallID] $message"
+
+            // If logMessagePrefix is not null or blank, join it and the logMessageBody string (respectively) together.
+            // Otherwise, just return "logMessageBody"
+            return logMessagePrefix?.ifBlank { null }?.let { "$it: $logMessageBody" } ?: logMessageBody
         }
 
         // Check if sounds are disabled
@@ -106,7 +122,7 @@ class SoundManager {
         Log.d(logTag, makeLogMessage("Created media player"))
 
         // Load the sound file and prepare the media player
-        /// TODO: The time between trigger and sound playback could be made quicker by preemptively loading the audio file and possibly using two separate media players
+        /// TODO: The time between trigger and sound playback could theoretically be made quicker by preemptively loading the audio file and possibly using two separate media players
         mediaPlayer.setDataSource(soundFile.absolutePath)
         mediaPlayer.prepare()
         Log.d(logTag, makeLogMessage("Loaded audio asset"))
@@ -119,9 +135,14 @@ class SoundManager {
         // Play the sound!
         Log.i(logTag, makeLogMessage("Playing audio"))
         mediaPlayer.start()
+
+        // Set what we should do when playback is finished
         mediaPlayer.setOnCompletionListener {
             Log.i(logTag, makeLogMessage("Playback complete"))
-            mediaPlayer.release() // Release resources associated with the media player
+
+            // When we're done, release resources currently held by the media player
+            mediaPlayer.release()
+            Log.d(logTag, makeLogMessage("mediaPlayer.release()"))
         }
 
         return SoundPlaybackResult.Success

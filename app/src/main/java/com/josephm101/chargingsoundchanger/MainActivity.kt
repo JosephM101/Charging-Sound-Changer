@@ -109,8 +109,8 @@ import com.josephm101.chargingsoundchanger.helpers.soundmanager.Sounds
 import com.josephm101.chargingsoundchanger.helpers.VersionHelper
 import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
 import com.josephm101.chargingsoundchanger.helpers.soundmanager.SaveSoundResult
-import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager.Companion.maxSoundDurationInMilliseconds
-import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager.Companion.maxSoundDurationInSeconds
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager.Companion.MAX_SOUND_DURATION_IN_MILLISECONDS
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager.Companion.MAX_SOUND_DURATION_IN_SECONDS
 import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundPlaybackResult
 import com.josephm101.chargingsoundchanger.preferences.AppPreferences
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
@@ -1115,10 +1115,10 @@ class MainActivity : ComponentActivity() {
         }
 
         // Check to make sure the chosen sound doesn't exceed the allowed length set by maxSoundDurationInMilliseconds
-        if (soundDurationInMilliseconds > maxSoundDurationInMilliseconds) {
+        if (soundDurationInMilliseconds > MAX_SOUND_DURATION_IN_MILLISECONDS) {
             Log.e(
                 logTag,
-                "Audio file duration is too long! ($soundDurationInMilliseconds > $maxSoundDurationInMilliseconds)"
+                "Audio file duration is too long! ($soundDurationInMilliseconds > $MAX_SOUND_DURATION_IN_MILLISECONDS)"
             )
             return SaveSoundResult.DurationLimitExceeded
         }
@@ -1234,7 +1234,7 @@ class MainActivity : ComponentActivity() {
                                     fileOpenErrorDialogMessageBodyText =
                                         getString(
                                             R.string.dialog_soundChooser_errorOpeningFile_durationTooLongMessage,
-                                            maxSoundDurationInSeconds
+                                            MAX_SOUND_DURATION_IN_SECONDS
                                         )
                                     fileOpenErrorDialogMessageTitle = "Sound length too long"
                                     showFileOpenErrorDialog.value = true

@@ -950,7 +950,7 @@ class MainActivity : ComponentActivity() {
                 servicePreferences.vibrationEnabled = value
                 vibrationDurationPreferenceCardShouldBeEnabled.value = value
                 if (value) {
-                    vibrator.defaultVibrate()
+                    vibrator.vibrateMs(servicePreferences.vibrationLengthMs.toLong())
                 }
             }
         )

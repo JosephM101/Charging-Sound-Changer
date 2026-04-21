@@ -22,6 +22,9 @@ class SoundManager {
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
         }
+
+        val maxSoundDurationInSeconds = 5
+        val maxSoundDurationInMilliseconds = maxSoundDurationInSeconds * 1000
     }
 
     /**
@@ -105,6 +108,7 @@ class SoundManager {
         Log.d(logTag, makeLogMessage("Created media player"))
 
         // Load the sound file and prepare the media player
+        /// TODO: The time between trigger and sound playback could be made quicker by preemptively loading the audio file and possibly using two separate media players
         mediaPlayer.setDataSource(soundFile.absolutePath)
         mediaPlayer.prepare()
         Log.d(logTag, makeLogMessage("Loaded audio asset"))

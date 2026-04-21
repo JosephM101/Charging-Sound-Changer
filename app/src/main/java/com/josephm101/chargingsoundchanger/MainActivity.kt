@@ -93,6 +93,9 @@ import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager
 import com.josephm101.chargingsoundchanger.helpers.soundmanager.Sounds
 import com.josephm101.chargingsoundchanger.helpers.VersionHelper
 import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.SaveSoundResult
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager.Companion.maxSoundDurationInMilliseconds
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager.Companion.maxSoundDurationInSeconds
 import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundPlaybackResult
 import com.josephm101.chargingsoundchanger.preferences.AppPreferences
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
@@ -1120,15 +1123,112 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun importSoundFile(uri: Uri, fileName: String, soundToSave: Sounds): SaveSoundResult {
+        val TAG = "importSoundFile"
+
+        Log.i(TAG, "Importing sound file for ${soundToSave.name}")
+
+        // Check the sound file to make sure it's valid
+        Log.d(TAG, "User selected file: $uri")
+        Log.d(TAG, "Verifying sound file")
+
+        // Load audio file
+        val mediaMetadataRetriever = MediaMetadataRetriever()
+        mediaMetadataRetriever.setDataSource(this.applicationContext, uri)
+
+        // Extract duration
+        val soundDuration: String? =
+            mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+
+        // Make sure duration isn't null before continuing (source file may be corrupted/invalid in this case, so just dump it; we'll pop up an error message)
+        if (soundDuration == null) {
+            Log.e(
+                TAG,
+                "Could not retrieve audio file length. Assuming file is invalid"
+            )
+            return SaveSoundResult.DurationWasNull
+        }
+
+        // Convert string duration to Int so we can compare it
+        val soundDurationInMilliseconds: Int? = soundDuration.toIntOrNull()
+        if (soundDurationInMilliseconds == null) {
+            Log.e(
+                TAG,
+                "Audio file length retrieved, but failed to convert to Int (original value: $soundDuration). Assuming file is invalid"
+            )
+            return SaveSoundResult.InvalidOrDamagedFile
+        }
+
+        // Check to make sure the chosen sound doesn't exceed the allowed length set by maxSoundDurationInMilliseconds
+        if (soundDurationInMilliseconds > maxSoundDurationInMilliseconds) {
+            Log.e(
+                TAG,
+                "Audio file duration is too long! ($soundDurationInMilliseconds > $maxSoundDurationInMilliseconds)"
+            )
+            return SaveSoundResult.DurationLimitExceeded
+        }
+
+        // Because of the stupid Scoped Storage system on newer versions of Android, we'll need to copy the audio file to the app's user data folder so that we can access it later.
+        // A bit of a pain, but hey, at least if the source file goes missing, it'll still work!
+        Log.d(
+            TAG,
+            "Copying audio file to internal app data directory"
+        )
+
+        val inputStream: InputStream? = contentResolver.openInputStream(uri)
+        if (inputStream == null) {
+            Log.d(
+                TAG,
+                "inputStream was null"
+            )
+            inputStream?.close()
+            return SaveSoundResult.InputStreamWasNull
+        }
+
+        // Create a new file to write to
+        val localSoundFile = File(applicationContext.filesDir, when(soundToSave){
+            Sounds.ChargingStartedSound -> "chargingSound"
+            Sounds.ChargingStoppedSound -> "chargingStoppedSound"
+        })
+
+        // Delete existing file
+        if (localSoundFile.exists()) {
+            localSoundFile.delete() // Delete existing file
+        }
+        localSoundFile.createNewFile()
+
+        // Copy the source file to the new file
+        inputStream.copyTo(localSoundFile.outputStream())
+        inputStream.close()
+
+        Log.d(
+            TAG,
+            "New URI: ${localSoundFile.absolutePath}"
+        )
+
+        when (soundToSave) {
+            Sounds.ChargingStartedSound -> {
+                servicePreferences.chargingStartedSoundFilePath = localSoundFile.absolutePath
+                servicePreferences.chargingStartedSoundFileName = fileName
+            }
+            Sounds.ChargingStoppedSound -> {
+                servicePreferences.chargingStoppedSoundFilePath = localSoundFile.absolutePath
+                servicePreferences.chargingStoppedSoundFileName = fileName
+            }
+        }
+
+        return SaveSoundResult.Success
+    }
+
     @SuppressLint("Range")
     @Composable
     fun ChooseSoundPreferenceCard() {
-        val soundFilePickerLoggerTag = "SoundFilePicker"
         CustomCardWithTitleAndIconAndContent(
             title = stringResource(R.string.ui_chooseSoundPreferenceCard_title),
             iconResId = R.drawable.baseline_audiotrack_24
         ) {
-            var chargingSoundFileName by remember { mutableStateOf(servicePreferences.chargingStartedSoundFileName) }
+            var chargingStartedSoundFileName by remember { mutableStateOf(servicePreferences.chargingStartedSoundFileName) }
+            var chargingStoppedSoundFileName by remember { mutableStateOf(servicePreferences.chargingStoppedSoundFileName) }
             var testButtonIsEnabled by remember { mutableStateOf(servicePreferences.chargingStartedSoundFileName.isNotEmpty()) }
             val showFileOpenErrorDialog = remember { mutableStateOf(false) }
             var fileOpenErrorDialogMessageTitle by remember { mutableStateOf(getString(R.string.ui_soundChooser_errorOpeningFile_dialogTitle)) }
@@ -1168,113 +1268,42 @@ class MainActivity : ComponentActivity() {
             Spacer(modifier = Modifier.size(width = 0.dp, height = 8.dp))
 
             SoundFilePicker { uri, fileName -> //OnFileSelected
-                val maxSoundDurationInSeconds = 5 // Change this
-                val maxSoundDurationInMilliseconds = maxSoundDurationInSeconds * 1000
-
-                // Check the sound file to make sure it's valid
-                Log.d(soundFilePickerLoggerTag, "Selected file: $uri")
-                Log.d(soundFilePickerLoggerTag, "Verifying audio file")
-
-                // Load audio file
-                val mediaMetadataRetriever = MediaMetadataRetriever()
-                mediaMetadataRetriever.setDataSource(this.applicationContext, uri)
-
-                // Extract duration
-                val soundDuration: String? =
-                    mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-
-                // Make sure duration isn't null before continuing (source file may be corrupted/invalid in this case, so just dump it; we'll pop up an error message)
-                if (soundDuration == null) {
-                    Log.e(
-                        soundFilePickerLoggerTag,
-                        "Could not retrieve audio file length. Assuming file is invalid"
-                    )
-                    // Show error dialog
-                    fileOpenErrorDialogMessageBodyText =
-                        getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
-                    showFileOpenErrorDialog.value = true
-                    return@SoundFilePicker
+                val result = importSoundFile(uri, fileName, Sounds.ChargingStartedSound)
+                when (result) {
+                    SaveSoundResult.Success -> {
+                        chargingStartedSoundFileName = fileName
+                        testButtonIsEnabled = true
+                    }
+                    SaveSoundResult.DurationLimitExceeded -> {
+                        // Show error dialog
+                        fileOpenErrorDialogMessageBodyText =
+                            getString(
+                                R.string.dialog_soundChooser_errorOpeningFile_durationTooLongMessage,
+                                maxSoundDurationInSeconds
+                            )
+                        fileOpenErrorDialogMessageTitle = "Sound length too long"
+                        showFileOpenErrorDialog.value = true
+                    }
+                    SaveSoundResult.InputStreamWasNull -> {
+                        // Show error dialog
+                        fileOpenErrorDialogMessageBodyText =
+                            getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
+                        showFileOpenErrorDialog.value = true
+                        return@SoundFilePicker
+                    }
+                    SaveSoundResult.InvalidOrDamagedFile -> {
+                        // Show error dialog
+                        fileOpenErrorDialogMessageBodyText =
+                            getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
+                        showFileOpenErrorDialog.value = true
+                    }
+                    SaveSoundResult.DurationWasNull -> {
+                        // Show error dialog
+                        fileOpenErrorDialogMessageBodyText =
+                            getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
+                        showFileOpenErrorDialog.value = true
+                    }
                 }
-
-                // Convert string duration to Int so we can compare it
-                val soundDurationInMilliseconds: Int? = soundDuration.toIntOrNull()
-                if (soundDurationInMilliseconds == null) {
-                    Log.e(
-                        soundFilePickerLoggerTag,
-                        "Audio file length retrieved, but failed to convert to Int (original value: $soundDuration). Assuming file is invalid"
-                    )
-                    // Show error dialog
-                    fileOpenErrorDialogMessageBodyText =
-                        getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
-                    showFileOpenErrorDialog.value = true
-                    return@SoundFilePicker
-                }
-
-                // Log sound duration
-                Log.d(
-                    soundFilePickerLoggerTag,
-                    "Audio file length: $soundDurationInMilliseconds"
-                )
-                mediaMetadataRetriever.close() // Close mediaMetadataRetriever & release file
-
-                // Check to make sure the chosen sound doesn't exceed the allowed length set by maxSoundDurationInMilliseconds
-                if (soundDurationInMilliseconds > maxSoundDurationInMilliseconds) {
-                    Log.e(
-                        soundFilePickerLoggerTag,
-                        "Audio file duration is too long! ($soundDurationInMilliseconds > $maxSoundDurationInMilliseconds)"
-                    )
-
-                    // Show error dialog
-                    fileOpenErrorDialogMessageBodyText =
-                        getString(
-                            R.string.dialog_soundChooser_errorOpeningFile_durationTooLongMessage,
-                            maxSoundDurationInSeconds
-                        )
-                    fileOpenErrorDialogMessageTitle = "Sound length too long"
-                    showFileOpenErrorDialog.value = true
-                    return@SoundFilePicker // Sound duration is too long
-                }
-
-                // Because of the stupid Scoped Storage system on newer versions of Android, we'll need to copy the audio file to the app's user data folder so that we can access it later.
-                // A bit of a pain, but hey, at least if the source file goes missing, it'll still work!
-                Log.d(
-                    soundFilePickerLoggerTag,
-                    "Copying audio file to internal app data directory"
-                )
-
-                val inputStream: InputStream? = contentResolver.openInputStream(uri)
-                if (inputStream == null) {
-                    Log.d(
-                        soundFilePickerLoggerTag,
-                        "inputStream was null"
-                    )
-                    inputStream?.close()
-
-                    // Show error dialog
-                    fileOpenErrorDialogMessageBodyText =
-                        getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
-                    showFileOpenErrorDialog.value = true
-                    return@SoundFilePicker
-                }
-
-                val copiedFile = File(applicationContext.filesDir, "chargingSound")
-                if (copiedFile.exists()) {
-                    copiedFile.delete() // Delete existing file
-                }
-                copiedFile.createNewFile()
-
-                inputStream.copyTo(copiedFile.outputStream())
-                inputStream.close()
-
-                Log.d(
-                    soundFilePickerLoggerTag,
-                    "New URI: ${copiedFile.absolutePath}"
-                )
-
-                servicePreferences.chargingStartedSoundFilePath = copiedFile.absolutePath
-                servicePreferences.chargingStartedSoundFileName = fileName
-                chargingSoundFileName = fileName
-                testButtonIsEnabled = true
             }
 
             Button(
@@ -1290,7 +1319,7 @@ class MainActivity : ComponentActivity() {
             }
             if (testButtonIsEnabled) {
                 Text(
-                    text = chargingSoundFileName,
+                    text = chargingStartedSoundFileName,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(10.dp, 6.dp, 0.dp, 0.dp)
                 )

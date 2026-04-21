@@ -1,11 +1,11 @@
-package com.josephm101.chargingsoundchanger
+package com.josephm101.chargingsoundchanger.helpers
 
 import android.app.NotificationManager
 import android.content.Context
 
-class DoNotDisturb {
+class DoNotDisturbHelper {
     companion object {
-        fun isDndEnabled(context: Context): Boolean {
+        fun isDoNotDisturbEnabled(context: Context): Boolean {
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             return notificationManager.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL

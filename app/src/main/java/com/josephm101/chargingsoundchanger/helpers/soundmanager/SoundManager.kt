@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.util.Log
-import com.josephm101.chargingsoundchanger.DoNotDisturb
+import com.josephm101.chargingsoundchanger.helpers.DoNotDisturbHelper
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import java.io.File
 
@@ -55,7 +55,7 @@ class SoundManager {
         }
 
         // Check if Do Not Disturb is enabled
-        if (DoNotDisturb.isDndEnabled(context)) {
+        if (DoNotDisturbHelper.isDoNotDisturbEnabled(context)) {
             Log.d(
                 logTag,
                 makeLogMessage("DND is enabled, not playing sound")

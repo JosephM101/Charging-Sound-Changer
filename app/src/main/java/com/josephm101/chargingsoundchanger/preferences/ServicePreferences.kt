@@ -13,15 +13,13 @@ import hu.autsoft.krate.stringPref
 class ServicePreferences(context: Context) : SimpleKrate(context) {
     // If false, charging sound will not play.
     var soundsEnabled by booleanPref().withDefault(true)
+    var soundPlaybackVolume by floatPref().withDefault(1.0f) // Sets how loud the sound will be when played (0.0f to 1.0f)
 
     var chargingStartedSoundFilePath by stringPref().withDefault("")
     var chargingStartedSoundFileName by stringPref().withDefault("")
-    var chargingStartedSoundPlaybackVolume by floatPref().withDefault(1.0f) // Sets how loud the sound will be when played (0.0f to 1.0f)
 
     var chargingStoppedSoundFilePath by stringPref().withDefault("")
     var chargingStoppedSoundFileName by stringPref().withDefault("")
-    //var chargingStoppedSoundPlaybackVolume by floatPref().withDefault(1.0f) // Sets how loud the sound will be when played (0.0f to 1.0f)
-    var chargingStoppedSoundEnabled by booleanPref().withDefault(false)
 
     // If enabled, device will vibrate for an amount of time (defined by vibrationLengthMs) when charging begins.
     // This simulates default Android behavior.

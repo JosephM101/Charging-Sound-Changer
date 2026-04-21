@@ -63,10 +63,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
@@ -76,7 +79,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -246,19 +248,27 @@ class MainActivity : ComponentActivity() {
                                             Text(stringResource(id = R.string.app_display_name))
                                         },
                                         actions = {
-                                            IconButton(
-                                                onClick = {
-                                                    navController.navigate(Screens.AdvancedSettings.route) {
-                                                        popUpTo(navController.graph.findStartDestination().id) {
-                                                            saveState = true
+                                            TooltipBox(
+                                                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                                tooltip = {
+                                                    PlainTooltip { Text(stringResource(R.string.tooltip_settings)) }
+                                                },
+                                                state = rememberTooltipState()
+                                            ) {
+                                                IconButton(
+                                                    onClick = {
+                                                        navController.navigate(Screens.AdvancedSettings.route) {
+                                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                                saveState = true
+                                                            }
                                                         }
                                                     }
+                                                ) {
+                                                    Icon(
+                                                        Icons.Filled.Settings,
+                                                        stringResource(R.string.settings_screen_title)
+                                                    )
                                                 }
-                                            ) {
-                                                Icon(
-                                                    Icons.Filled.Settings,
-                                                    stringResource(R.string.settings_screen_title)
-                                                )
                                             }
                                         }
                                     )
@@ -1025,12 +1035,12 @@ class MainActivity : ComponentActivity() {
             iconResId = R.drawable.volume
         ) {
             val sliderPosition =
-                remember { mutableFloatStateOf(servicePreferences.chargingStartedSoundPlaybackVolume) }
+                remember { mutableFloatStateOf(servicePreferences.soundPlaybackVolume) }
             Slider(
                 value = sliderPosition.floatValue,
                 onValueChange = {
                     sliderPosition.floatValue = it
-                    servicePreferences.chargingStartedSoundPlaybackVolume = it
+                    servicePreferences.soundPlaybackVolume = it
                 },
                 onValueChangeFinished = {
                     // Send a broadcast to ChargingSoundService to test the sound
@@ -1275,9 +1285,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                val tooltipState = rememberTooltipState()
-                val scope = rememberCoroutineScope()
-
                 OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1387,45 +1394,72 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             }
-                            IconButton(
-                                enabled = when (soundType) {
-                                    Sounds.ChargingStarted -> testChargingStartedSoundButtonIsEnabled
-                                    Sounds.ChargingStopped -> testChargingStoppedSoundButtonIsEnabled
+                            
+                            TooltipBox(
+                                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                tooltip = {
+                                    PlainTooltip { Text(stringResource(R.string.tooltip_forget_sound)) }
                                 },
-                                onClick = {
-                                    showResetSoundDialog.value = true
-                                },
-                                modifier = iconButtonModifier
+                                state = rememberTooltipState()
                             ) {
-                                Icon(Icons.Filled.Clear, "Reset")
-                            }
-
-                            IconButtonSpacer()
-
-                            IconButton(
-                                onClick = {
-                                    if (!hasExternalStoragePermissions()) {
-                                        openFilePermissionsAlertDialog.value = true
-                                    } else {
-                                        filePickerLauncher.launch(mimeTypes)
-                                    }
-                                },
-                                modifier = iconButtonModifier
-                            ) {
-                                Icon(Icons.Filled.FolderOpen, "Open")
-                            }
-                            IconButtonSpacer()
-                            IconButton(
-                                onClick = {
-                                    testSound(soundType)
-                                },
-                                modifier = iconButtonModifier,
-                                enabled = when (soundType) {
-                                    Sounds.ChargingStarted -> testChargingStartedSoundButtonIsEnabled
-                                    Sounds.ChargingStopped -> testChargingStoppedSoundButtonIsEnabled
+                                IconButton(
+                                    enabled = when (soundType) {
+                                        Sounds.ChargingStarted -> testChargingStartedSoundButtonIsEnabled
+                                        Sounds.ChargingStopped -> testChargingStoppedSoundButtonIsEnabled
+                                    },
+                                    onClick = {
+                                        showResetSoundDialog.value = true
+                                    },
+                                    modifier = iconButtonModifier
+                                ) {
+                                    Icon(Icons.Filled.Clear, "Reset")
                                 }
+                            }
+
+                            IconButtonSpacer()
+
+                            TooltipBox(
+                                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                tooltip = {
+                                    PlainTooltip { Text(stringResource(R.string.tooltip_choose_sound_file)) }
+                                },
+                                state = rememberTooltipState()
                             ) {
-                                Icon(Icons.Filled.PlayArrow, "Test")
+                                IconButton(
+                                    onClick = {
+                                        if (!hasExternalStoragePermissions()) {
+                                            openFilePermissionsAlertDialog.value = true
+                                        } else {
+                                            filePickerLauncher.launch(mimeTypes)
+                                        }
+                                    },
+                                    modifier = iconButtonModifier
+                                ) {
+                                    Icon(Icons.Filled.FolderOpen, "Open")
+                                }
+                            }
+
+                            IconButtonSpacer()
+
+                            TooltipBox(
+                                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                tooltip = {
+                                    PlainTooltip { Text(stringResource(R.string.tooltip_test_sound)) }
+                                },
+                                state = rememberTooltipState()
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        testSound(soundType)
+                                    },
+                                    modifier = iconButtonModifier,
+                                    enabled = when (soundType) {
+                                        Sounds.ChargingStarted -> testChargingStartedSoundButtonIsEnabled
+                                        Sounds.ChargingStopped -> testChargingStoppedSoundButtonIsEnabled
+                                    }
+                                ) {
+                                    Icon(Icons.Filled.PlayArrow, "Test")
+                                }
                             }
                         }
                     }

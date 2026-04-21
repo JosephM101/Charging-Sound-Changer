@@ -112,7 +112,7 @@ class SoundManager {
         Log.d(logTag, makeLogMessage("Loaded audio asset"))
 
         // Set playback volume from preferences.
-        val playbackVolume = servicePreferences.chargingStartedSoundPlaybackVolume
+        val playbackVolume = servicePreferences.soundPlaybackVolume
         mediaPlayer.setVolume(playbackVolume, playbackVolume)
         Log.d(logTag, makeLogMessage("Set media player volume ($playbackVolume)"))
 

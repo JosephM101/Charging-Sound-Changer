@@ -1063,9 +1063,18 @@ class MainActivity : ComponentActivity() {
             logMessagePrefix = "testChargingSound()"
         )
 
-        if (result == SoundPlaybackResult.DoNotDisturbIsEnabled) {
-            Toast.makeText(applicationContext, "Do Not Disturb is enabled", Toast.LENGTH_SHORT)
-                .show()
+        when (result) {
+            SoundPlaybackResult.SoundsDisabled -> {
+                Toast.makeText(applicationContext, "Sounds are disabled", Toast.LENGTH_SHORT)
+                    .show()
+            }
+
+            SoundPlaybackResult.DoNotDisturbIsEnabled -> {
+                Toast.makeText(applicationContext, "Do Not Disturb is enabled", Toast.LENGTH_SHORT)
+                    .show()
+            }
+
+            else -> {}
         }
     }
 

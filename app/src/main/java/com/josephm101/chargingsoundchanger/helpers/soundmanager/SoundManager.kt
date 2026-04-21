@@ -3,9 +3,7 @@ package com.josephm101.chargingsoundchanger.helpers.soundmanager
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.os.Build
 import android.util.Log
-import androidx.core.content.ContextCompat.createAttributionContext
 import com.josephm101.chargingsoundchanger.DoNotDisturb
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import java.io.File
@@ -68,11 +66,11 @@ class SoundManager {
         // Figure out which sound we're supposed to play
         Log.d(logTag, makeLogMessage("${soundToPlay.name} requested"))
         val soundFilePath: String = when (soundToPlay) {
-            Sounds.ChargingStartedSound -> {
+            Sounds.ChargingStarted -> {
                 servicePreferences.chargingStartedSoundFilePath
             }
 
-            Sounds.ChargingStoppedSound -> {
+            Sounds.ChargingStopped -> {
                 servicePreferences.chargingStoppedSoundFilePath
             }
         }
@@ -80,11 +78,11 @@ class SoundManager {
         // If no sound file has been set for the selected sound
         if (soundFilePath == "") {
             when (soundToPlay) {
-                Sounds.ChargingStartedSound -> {
+                Sounds.ChargingStarted -> {
                     Log.e(logTag, makeLogMessage("ChargingStartedSoundFilePath not initialized"))
                 }
 
-                Sounds.ChargingStoppedSound -> {
+                Sounds.ChargingStopped -> {
                     Log.e(logTag, makeLogMessage("ChargingStoppedSoundFilePath not initialized"))
                 }
             }

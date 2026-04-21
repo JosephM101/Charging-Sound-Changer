@@ -33,18 +33,26 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -54,11 +62,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -66,7 +76,9 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -75,6 +87,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -540,7 +553,7 @@ class MainActivity : ComponentActivity() {
             // HorizontalDivider(modifier = Modifier.fillMaxWidth())
             PreferencesTextLine("Settings")
             SoundEnabledPreferenceCard()
-            ChooseSoundPreferenceCard()
+            SoundSetupPreferenceCard()
 
             // Draw footer
             Column(
@@ -1023,7 +1036,7 @@ class MainActivity : ComponentActivity() {
                     // Send a broadcast to ChargingSoundService to test the sound
                     //val testSoundBroadcast = Intent(IntentStrings.ChargingSoundServiceTestSoundIntent)
                     //sendBroadcast(testSoundBroadcast)
-                    testChargingSound()
+                    testSound()
                 },
                 valueRange = 0.1f..1.0f,
                 steps = 4,
@@ -1031,88 +1044,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun SoundFilePicker(onFileSelected: (Uri, String) -> Unit) {
-        //val context = LocalContext.current
-        //val coroutineScope = rememberCoroutineScope()
-        val selectedFileUri = remember { mutableStateOf<Uri?>(null) }
-
-        val filePickerLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument(),
-            onResult = { uri ->
-                if (uri != null) {
-                    selectedFileUri.value = uri
-
-                    // Get filename
-                    lateinit var fileName: String
-                    val cursor = contentResolver.query(uri, null, null, null, null)
-                    cursor?.use {
-                        if (it.moveToFirst()) {
-                            val displayName =
-                                it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
-                            // Do something with the file name
-                            fileName = displayName
-                        }
-                    }
-
-                    // Return the URI of the selected file to the attached callback (can be found in ChooseSoundPreferenceCard())
-                    onFileSelected(uri, fileName)
-                }
-            }
-        )
-
-        // Define supported audio file types for the file selector
-        val mimeTypes = arrayOf("audio/mpeg", "audio/wav", "audio/x-wav", "audio/ogg", "audio/opus")
-
-        val openFilePermissionsAlertDialog = remember { mutableStateOf(false) }
-        when {
-            openFilePermissionsAlertDialog.value -> {
-                AlertDialog(
-                    onDismissRequest = {
-                        openFilePermissionsAlertDialog.value = false
-                    },
-                    title = {
-                        Text(text = stringResource(R.string.ui_chooseSoundPreferenceCard_filePermissions_dialog_title))
-                    },
-                    text = {
-                        Text(text = stringResource(R.string.ui_chooseSoundPreferenceCard_filePermissions_dialog_message))
-                    },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                openFilePermissionsAlertDialog.value = false
-                                requestPermissionToAccessExternalStorage()
-                            }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.request_permission)
-                            )
-                        }
-                    }
-                )
-            }
-        }
-
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                if (!hasExternalStoragePermissions()) {
-                    openFilePermissionsAlertDialog.value = true
-                } else {
-                    filePickerLauncher.launch(mimeTypes)
-                }
-            }
-        ) {
-            Text("Import sound")
-        }
-    }
-
-    fun testChargingSound() {
+    fun testSound(sound: Sounds = Sounds.ChargingStarted) {
         val result = chargingSoundManager.playSound(
             context = applicationContext,
             servicePreferences = servicePreferences,
-            soundToPlay = Sounds.ChargingStartedSound,
+            soundToPlay = sound,
             logTag = LoggerTags.MainActivity.DEFAULT,
             logMessagePrefix = "testChargingSound()"
         )
@@ -1124,13 +1060,13 @@ class MainActivity : ComponentActivity() {
     }
 
     fun importSoundFile(uri: Uri, fileName: String, soundToSave: Sounds): SaveSoundResult {
-        val TAG = "importSoundFile"
+        val logTag = "importSoundFile"
 
-        Log.i(TAG, "Importing sound file for ${soundToSave.name}")
+        Log.i(logTag, "Importing sound file for ${soundToSave.name}")
 
         // Check the sound file to make sure it's valid
-        Log.d(TAG, "User selected file: $uri")
-        Log.d(TAG, "Verifying sound file")
+        Log.d(logTag, "User selected file: $uri")
+        Log.d(logTag, "Verifying sound file")
 
         // Load audio file
         val mediaMetadataRetriever = MediaMetadataRetriever()
@@ -1143,7 +1079,7 @@ class MainActivity : ComponentActivity() {
         // Make sure duration isn't null before continuing (source file may be corrupted/invalid in this case, so just dump it; we'll pop up an error message)
         if (soundDuration == null) {
             Log.e(
-                TAG,
+                logTag,
                 "Could not retrieve audio file length. Assuming file is invalid"
             )
             return SaveSoundResult.DurationWasNull
@@ -1153,7 +1089,7 @@ class MainActivity : ComponentActivity() {
         val soundDurationInMilliseconds: Int? = soundDuration.toIntOrNull()
         if (soundDurationInMilliseconds == null) {
             Log.e(
-                TAG,
+                logTag,
                 "Audio file length retrieved, but failed to convert to Int (original value: $soundDuration). Assuming file is invalid"
             )
             return SaveSoundResult.InvalidOrDamagedFile
@@ -1162,7 +1098,7 @@ class MainActivity : ComponentActivity() {
         // Check to make sure the chosen sound doesn't exceed the allowed length set by maxSoundDurationInMilliseconds
         if (soundDurationInMilliseconds > maxSoundDurationInMilliseconds) {
             Log.e(
-                TAG,
+                logTag,
                 "Audio file duration is too long! ($soundDurationInMilliseconds > $maxSoundDurationInMilliseconds)"
             )
             return SaveSoundResult.DurationLimitExceeded
@@ -1171,14 +1107,14 @@ class MainActivity : ComponentActivity() {
         // Because of the stupid Scoped Storage system on newer versions of Android, we'll need to copy the audio file to the app's user data folder so that we can access it later.
         // A bit of a pain, but hey, at least if the source file goes missing, it'll still work!
         Log.d(
-            TAG,
+            logTag,
             "Copying audio file to internal app data directory"
         )
 
         val inputStream: InputStream? = contentResolver.openInputStream(uri)
         if (inputStream == null) {
             Log.d(
-                TAG,
+                logTag,
                 "inputStream was null"
             )
             inputStream?.close()
@@ -1186,10 +1122,10 @@ class MainActivity : ComponentActivity() {
         }
 
         // Create a new file to write to
-        val localSoundFile = File(applicationContext.filesDir, when(soundToSave){
-            Sounds.ChargingStartedSound -> "chargingSound"
-            Sounds.ChargingStoppedSound -> "chargingStoppedSound"
-        })
+        val localSoundFile = File(
+            applicationContext.filesDir,
+            soundToSave.internalFileName
+        )
 
         // Delete existing file
         if (localSoundFile.exists()) {
@@ -1202,16 +1138,16 @@ class MainActivity : ComponentActivity() {
         inputStream.close()
 
         Log.d(
-            TAG,
+            logTag,
             "New URI: ${localSoundFile.absolutePath}"
         )
 
         when (soundToSave) {
-            Sounds.ChargingStartedSound -> {
+            Sounds.ChargingStarted -> {
                 servicePreferences.chargingStartedSoundFilePath = localSoundFile.absolutePath
                 servicePreferences.chargingStartedSoundFileName = fileName
             }
-            Sounds.ChargingStoppedSound -> {
+            Sounds.ChargingStopped -> {
                 servicePreferences.chargingStoppedSoundFilePath = localSoundFile.absolutePath
                 servicePreferences.chargingStoppedSoundFileName = fileName
             }
@@ -1220,20 +1156,283 @@ class MainActivity : ComponentActivity() {
         return SaveSoundResult.Success
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("Range")
     @Composable
-    fun ChooseSoundPreferenceCard() {
+    fun SoundSetupPreferenceCard() {
         CustomCardWithTitleAndIconAndContent(
             title = stringResource(R.string.ui_chooseSoundPreferenceCard_title),
             iconResId = R.drawable.baseline_audiotrack_24
         ) {
             var chargingStartedSoundFileName by remember { mutableStateOf(servicePreferences.chargingStartedSoundFileName) }
+            var testChargingStartedSoundButtonIsEnabled by remember { mutableStateOf(servicePreferences.chargingStartedSoundFileName.isNotEmpty()) }
+
             var chargingStoppedSoundFileName by remember { mutableStateOf(servicePreferences.chargingStoppedSoundFileName) }
-            var testButtonIsEnabled by remember { mutableStateOf(servicePreferences.chargingStartedSoundFileName.isNotEmpty()) }
+            var testChargingStoppedSoundButtonIsEnabled by remember { mutableStateOf(servicePreferences.chargingStoppedSoundFileName.isNotEmpty()) }
+
             val showFileOpenErrorDialog = remember { mutableStateOf(false) }
             var fileOpenErrorDialogMessageTitle by remember { mutableStateOf(getString(R.string.ui_soundChooser_errorOpeningFile_dialogTitle)) }
             var fileOpenErrorDialogMessageBodyText by remember { mutableStateOf("") }
 
+            @Composable
+            fun SoundRow(soundType: Sounds) {
+                val selectedFileUri = remember { mutableStateOf<Uri?>(null) }
+
+                val filePickerLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.OpenDocument(),
+                    onResult = { uri ->
+                        if (uri != null) {
+                            selectedFileUri.value = uri
+
+                            // Get filename
+                            lateinit var fileName: String
+                            val cursor = contentResolver.query(uri, null, null, null, null)
+                            cursor?.use {
+                                if (it.moveToFirst()) {
+                                    val displayName =
+                                        it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+                                    // Remember the original file name
+                                    fileName = displayName
+                                }
+                            }
+
+                            val result = importSoundFile(uri, fileName, soundType)
+                            when (result) {
+                                SaveSoundResult.Success -> {
+                                    when (soundType) {
+                                        Sounds.ChargingStarted -> {
+                                            chargingStartedSoundFileName = fileName
+                                            testChargingStartedSoundButtonIsEnabled = true
+                                        }
+                                        Sounds.ChargingStopped -> {
+                                            chargingStoppedSoundFileName = fileName
+                                            testChargingStoppedSoundButtonIsEnabled = true
+                                        }
+                                    }
+                                }
+                                SaveSoundResult.DurationLimitExceeded -> {
+                                    // Show error dialog
+                                    fileOpenErrorDialogMessageBodyText =
+                                        getString(
+                                            R.string.dialog_soundChooser_errorOpeningFile_durationTooLongMessage,
+                                            maxSoundDurationInSeconds
+                                        )
+                                    fileOpenErrorDialogMessageTitle = "Sound length too long"
+                                    showFileOpenErrorDialog.value = true
+                                }
+                                SaveSoundResult.InputStreamWasNull -> {
+                                    // Show error dialog
+                                    fileOpenErrorDialogMessageBodyText =
+                                        getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
+                                    showFileOpenErrorDialog.value = true
+                                }
+                                SaveSoundResult.InvalidOrDamagedFile -> {
+                                    // Show error dialog
+                                    fileOpenErrorDialogMessageBodyText =
+                                        getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
+                                    showFileOpenErrorDialog.value = true
+                                }
+                                SaveSoundResult.DurationWasNull -> {
+                                    // Show error dialog
+                                    fileOpenErrorDialogMessageBodyText =
+                                        getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
+                                    showFileOpenErrorDialog.value = true
+                                }
+                            }
+                        }
+                    }
+                )
+
+                // Define supported audio file types for the file selector
+                val mimeTypes = arrayOf("audio/mpeg", "audio/wav", "audio/x-wav", "audio/ogg", "audio/opus")
+
+                val openFilePermissionsAlertDialog = remember { mutableStateOf(false) }
+                when {
+                    openFilePermissionsAlertDialog.value -> {
+                        AlertDialog(
+                            onDismissRequest = {
+                                openFilePermissionsAlertDialog.value = false
+                            },
+                            title = {
+                                Text(text = stringResource(R.string.ui_chooseSoundPreferenceCard_filePermissions_dialog_title))
+                            },
+                            text = {
+                                Text(text = stringResource(R.string.ui_chooseSoundPreferenceCard_filePermissions_dialog_message))
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        openFilePermissionsAlertDialog.value = false
+                                        requestPermissionToAccessExternalStorage()
+                                    }
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.request_permission)
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+
+                val tooltipState = rememberTooltipState()
+                val scope = rememberCoroutineScope()
+
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    //elevation = CardDefaults.cardElevation(1.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = 4.dp,
+                                bottom = 4.dp,
+                                start = 12.dp,
+                                end = 8.dp
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f, false)
+                                .padding(top = 3.dp, bottom = 3.dp)
+                        ) {
+                            Text(
+                                text = when (soundType) {
+                                    Sounds.ChargingStarted -> stringResource(R.string.sound_name_charging_started)
+                                    Sounds.ChargingStopped -> stringResource(R.string.sound_name_charging_stopped)
+                                },
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .basicMarquee(velocity = 50.dp)
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = when (soundType) {
+                                    Sounds.ChargingStarted ->
+                                        chargingStartedSoundFileName.ifBlank {
+                                            stringResource(R.string.no_file_selected)
+                                        }
+
+                                    Sounds.ChargingStopped ->
+                                        chargingStoppedSoundFileName.ifBlank {
+                                            stringResource(R.string.no_file_selected)
+                                        }
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .basicMarquee(velocity = 50.dp)
+                            )
+                        }
+                        // Spacer(Modifier.weight(0.1f))
+                        Row(
+                            modifier = Modifier
+                                .wrapContentWidth()
+                            //.weight(1f, fill = false)
+                        ) {
+                            val iconButtonModifier = Modifier
+                                .size(32.dp)
+
+                            @Composable
+                            fun IconButtonSpacer() {
+                                Spacer(Modifier.size(width = 4.dp, height = 0.dp))
+                            }
+
+                            val showResetSoundDialog = remember { mutableStateOf(false) }
+                            when {
+                                showResetSoundDialog.value -> {
+                                    AlertDialog(
+                                        title = {
+                                            Text(text = "Forget sound")
+                                        },
+                                        text = {
+                                            Text(text = "Are you sure you want to forget that sound?")
+                                        },
+                                        onDismissRequest = { showResetSoundDialog.value = false },
+                                        confirmButton = {
+                                            TextButton(onClick = {
+                                                showResetSoundDialog.value = false
+
+                                                when (soundType) {
+                                                    Sounds.ChargingStarted -> {
+                                                        servicePreferences.chargingStartedSoundFilePath = ""
+                                                        servicePreferences.chargingStartedSoundFileName = ""
+                                                        chargingStartedSoundFileName = ""
+                                                        testChargingStartedSoundButtonIsEnabled = false
+                                                    }
+
+                                                    Sounds.ChargingStopped -> {
+                                                        servicePreferences.chargingStoppedSoundFilePath = ""
+                                                        servicePreferences.chargingStoppedSoundFileName = ""
+                                                        chargingStoppedSoundFileName = ""
+                                                        testChargingStoppedSoundButtonIsEnabled = false
+                                                    }
+                                                }
+                                            }) {
+                                                Text("Forget")
+                                            }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = {
+                                                showResetSoundDialog.value = false
+                                            }) {
+                                                Text(stringResource(R.string.cancel))
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                            IconButton(
+                                enabled = when (soundType) {
+                                    Sounds.ChargingStarted -> testChargingStartedSoundButtonIsEnabled
+                                    Sounds.ChargingStopped -> testChargingStoppedSoundButtonIsEnabled
+                                },
+                                onClick = {
+                                    showResetSoundDialog.value = true
+                                },
+                                modifier = iconButtonModifier
+                            ) {
+                                Icon(Icons.Filled.Clear, "Reset")
+                            }
+
+                            IconButtonSpacer()
+
+                            IconButton(
+                                onClick = {
+                                    if (!hasExternalStoragePermissions()) {
+                                        openFilePermissionsAlertDialog.value = true
+                                    } else {
+                                        filePickerLauncher.launch(mimeTypes)
+                                    }
+                                },
+                                modifier = iconButtonModifier
+                            ) {
+                                Icon(Icons.Filled.FolderOpen, "Open")
+                            }
+                            IconButtonSpacer()
+                            IconButton(
+                                onClick = {
+                                    testSound(soundType)
+                                },
+                                modifier = iconButtonModifier,
+                                enabled = when (soundType) {
+                                    Sounds.ChargingStarted -> testChargingStartedSoundButtonIsEnabled
+                                    Sounds.ChargingStopped -> testChargingStoppedSoundButtonIsEnabled
+                                }
+                            ) {
+                                Icon(Icons.Filled.PlayArrow, "Test")
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Error Dialog
             when {
                 showFileOpenErrorDialog.value -> {
                     AlertDialog(
@@ -1265,64 +1464,14 @@ class MainActivity : ComponentActivity() {
                 text = stringResource(R.string.ui_chooseSoundPreferenceCard_description),
                 style = cardDefaultBodyTextStyle
             )
-            Spacer(modifier = Modifier.size(width = 0.dp, height = 8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            SoundFilePicker { uri, fileName -> //OnFileSelected
-                val result = importSoundFile(uri, fileName, Sounds.ChargingStartedSound)
-                when (result) {
-                    SaveSoundResult.Success -> {
-                        chargingStartedSoundFileName = fileName
-                        testButtonIsEnabled = true
-                    }
-                    SaveSoundResult.DurationLimitExceeded -> {
-                        // Show error dialog
-                        fileOpenErrorDialogMessageBodyText =
-                            getString(
-                                R.string.dialog_soundChooser_errorOpeningFile_durationTooLongMessage,
-                                maxSoundDurationInSeconds
-                            )
-                        fileOpenErrorDialogMessageTitle = "Sound length too long"
-                        showFileOpenErrorDialog.value = true
-                    }
-                    SaveSoundResult.InputStreamWasNull -> {
-                        // Show error dialog
-                        fileOpenErrorDialogMessageBodyText =
-                            getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
-                        showFileOpenErrorDialog.value = true
-                        return@SoundFilePicker
-                    }
-                    SaveSoundResult.InvalidOrDamagedFile -> {
-                        // Show error dialog
-                        fileOpenErrorDialogMessageBodyText =
-                            getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
-                        showFileOpenErrorDialog.value = true
-                    }
-                    SaveSoundResult.DurationWasNull -> {
-                        // Show error dialog
-                        fileOpenErrorDialogMessageBodyText =
-                            getString(R.string.dialog_soundChooser_errorOpeningFile_fileCorruptedOrUnsupported)
-                        showFileOpenErrorDialog.value = true
-                    }
-                }
-            }
-
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    testChargingSound()
-                },
-                enabled = testButtonIsEnabled
-            ) {
-                Text(
-                    text = "Test",
-                )
-            }
-            if (testButtonIsEnabled) {
-                Text(
-                    text = chargingStartedSoundFileName,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(10.dp, 6.dp, 0.dp, 0.dp)
-                )
+            listOf(
+                Sounds.ChargingStarted,
+                Sounds.ChargingStopped
+            ).forEach { soundType ->
+                SoundRow(soundType)
+                Spacer(Modifier.height(12.dp))
             }
         }
     }

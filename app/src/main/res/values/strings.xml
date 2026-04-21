@@ -35,8 +35,8 @@
     <string name="ui_alphaBuildNoticeCard_title">Alpha build</string>
     <string name="ui_alphaBuildNoticeCard_message">This app is (very much) in the alpha stages of development. Potentially major changes will be made from release to release, and the app may have bugs that will cause it to spontaneously stop working.\nPlease keep that in mind! :)</string>
 
-    <string name="ui_soundEnabledPreferenceCard_title">Sound enabled</string>
-    <string name="ui_soundEnabledPreferenceCard_description">Enable/disable charging sound</string>
+    <string name="ui_soundEnabledPreferenceCard_title">Sounds enabled</string>
+    <string name="ui_soundEnabledPreferenceCard_description">Enable/disable sounds</string>
 
     <string name="ui_vibrationEnabledPreferenceCard_title">Enable vibration (Experimental)</string>
     <string name="ui_vibrationEnabledPreferenceCard_description">Vibrate when charging begins</string>
@@ -47,8 +47,8 @@
     <string name="ui_respectDnDPreferenceCard_title">Respect Do Not Disturb</string>
     <string name="ui_respectDnDPreferenceCard_description">When enabled, sounds will not be played if Do Not Disturb is active.</string>
 
-    <string name="ui_chooseSoundPreferenceCard_title">Sound</string>
-    <string name="ui_chooseSoundPreferenceCard_description">Choose the sound that plays when a charger is connected.</string>
+    <string name="ui_chooseSoundPreferenceCard_title">Sounds</string>
+    <string name="ui_chooseSoundPreferenceCard_description">Choose the sounds that play when a charger is connected or disconnected.</string>
 
     <string name="ui_chooseSoundPreferenceCard_filePermissions_dialog_message">In order to browse sounds, I need permission to access your phone\'s files. You\'ll only have to do this once. After you\'ve chosen a sound, you can revoke the permission in Android\'s settings, should you choose to do so.\n\nIf you don\'t grant permissions, you won\'t be able to add any sounds.</string>
     <string name="ui_chooseSoundPreferenceCard_filePermissions_dialog_title">File permissions</string>
@@ -69,5 +69,8 @@
     <string name="ui_notificationPermissionsRationale_dialogTitle">Notification Permission</string>
     <string name="open_android_settings_for_this_app">Open Android Settings for this app</string>
     <string name="open_settings">Open Settings</string>
+    <string name="no_file_selected">No file selected</string>
+    <string name="sound_name_charging_started">Charging Started</string>
+    <string name="sound_name_charging_stopped">Charging Stopped</string>
 
 </resources>

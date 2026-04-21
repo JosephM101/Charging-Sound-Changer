@@ -77,9 +77,8 @@ class ChargingSoundService : Service() {
                 }
 
                 ACTION_POWER_DISCONNECTED -> {
-                    Log.i(serviceLogTag, "Received \"ACTION_POWER_DISCONNECTED\" (not handled yet)")
-                    /// TODO: When UI is implemented for choosing a "charging stopped" sound, uncomment this line
-                    //playChargingStoppedSound()
+                    Log.i(serviceLogTag, "Received \"ACTION_POWER_DISCONNECTED\"")
+                    playChargingStoppedSound()
                 }
             }
         }
@@ -217,7 +216,7 @@ class ChargingSoundService : Service() {
         soundManager.playSound(
             context = applicationContext,
             servicePreferences = servicePreferences,
-            soundToPlay = Sounds.ChargingStartedSound,
+            soundToPlay = Sounds.ChargingStarted,
             logTag = serviceLogTag,
             logMessagePrefix = "playChargingStartedSound()"
         )
@@ -230,7 +229,7 @@ class ChargingSoundService : Service() {
         soundManager.playSound(
             context = applicationContext,
             servicePreferences = servicePreferences,
-            soundToPlay = Sounds.ChargingStoppedSound,
+            soundToPlay = Sounds.ChargingStopped,
             logTag = serviceLogTag,
             logMessagePrefix = "playChargingStoppedSound()"
         )

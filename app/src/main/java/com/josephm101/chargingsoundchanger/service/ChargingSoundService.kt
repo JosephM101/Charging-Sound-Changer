@@ -152,12 +152,12 @@ class ChargingSoundService : Service() {
             )
 
         /* Now we'll build the notification */
-        val notification = NotificationCompat.Builder(
+        val serviceNotification = NotificationCompat.Builder(
             this,
             persistentNotificationChannelID
         ) // Create notification builder, assign channel ID
             .setSmallIcon(R.drawable.baseline_battery_charging_full_24) // Set notification icon
-            .setContentText(getString(R.string.service_notification_notification_content_text)) // Set the notification content (body) text
+            .setContentTitle(getString(R.string.service_notification_notification_content_text)) // Set the notification content (body) text
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE) // Make this a service notification
             .setOngoing(true) // This makes it persistent
@@ -165,7 +165,7 @@ class ChargingSoundService : Service() {
             .build() // Put it all together!
 
         /* Start the service as a foreground service with the notification we just created. */
-        startForeground(persistentNotificationID, notification)
+        startForeground(persistentNotificationID, serviceNotification)
 
         Log.i(serviceLogTag, "INIT: Foreground service has started")
         return START_STICKY // Tell OS to recreate the service when it has enough memory if the service was killed due to lack of memory

@@ -48,14 +48,10 @@ class ChargingSoundService : Service() {
         "ChargingSoundService" // This is the logging tag that we use for Log.[d/i/w/e]()
 
     /*
-    To ensure this service's survival after we start it (quite a battle in Android), we create a persistent
-    service notification. Doesn't need to be anything fancy.
+    To enhance this service's chances of survival after we start it (quite a battle in Android), we need to create
+    a persistent service notification. It doesn't need to be anything fancy.
     These values define what the ID of the notification will be, and when we register a notification
     channel for the aforementioned service notification, its ID will be the value stored in persistentNotificationChannelID.
-
-    These values aren't terribly important in this case since this app will only have a single notification,
-    but for larger apps that can have multiple notifications in different categories, these parameters
-    are required.
      */
     private val persistentNotificationChannelID = "charging_sound_service_channel_id"
     private val persistentNotificationID = 101

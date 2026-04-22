@@ -82,18 +82,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -115,6 +111,7 @@ import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundPlaybackRes
 import com.josephm101.chargingsoundchanger.preferences.AppPreferences
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import com.josephm101.chargingsoundchanger.service.ChargingSoundService
+import com.josephm101.chargingsoundchanger.ui.components.CenteredFooterText
 import com.josephm101.chargingsoundchanger.ui.components.card.CardConstants.cardDefaultBodyTextStyle
 import com.josephm101.chargingsoundchanger.ui.components.card.CustomCard.CustomCardWithTitleAndIconAndContent
 import com.josephm101.chargingsoundchanger.ui.components.card.SwitchCard
@@ -599,22 +596,6 @@ class MainActivity : ComponentActivity() {
             )
         )
         //Text(text, modifier = Modifier.padding(start = 8.dp, bottom = 4.dp, top = 10.dp))
-    }
-
-    @OptIn(ExperimentalFoundationApi::class)
-    @Composable
-    fun CenteredFooterText(text: String) {
-        Text(
-            text,
-            modifier = Modifier
-                .fillMaxWidth()
-                .alpha(0.6f)
-                .basicMarquee(),
-            textAlign = TextAlign.Center,
-            style = TextStyle(
-                fontSize = 14.sp,
-            )
-        )
     }
 
     @OptIn(ExperimentalFoundationApi::class)
@@ -1531,9 +1512,9 @@ class MainActivity : ComponentActivity() {
 
     private fun permissionToIgnoreBatteryOptimizationsIsGranted(): Boolean {
         val packageName = applicationContext.packageName
-        val pm = applicationContext.getSystemService(POWER_SERVICE) as PowerManager
+        val powerManager = applicationContext.getSystemService(POWER_SERVICE) as PowerManager
 
-        return pm.isIgnoringBatteryOptimizations(packageName)
+        return powerManager.isIgnoringBatteryOptimizations(packageName)
     }
 
     /// TODO: Random thought, but it might be wiser to move the permissions requests to a separate paginated activity, and have that activity run before the main activity when any required permissions aren't yet granted. That way, the service wouldn't be started until every required permission has been granted. Plus, having them be full-screen might emphasize their importance.

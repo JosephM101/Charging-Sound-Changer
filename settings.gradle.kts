@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Battery Sound Changer"
+rootProject.name = "Charging Sound Changer"
 include(":app")
  

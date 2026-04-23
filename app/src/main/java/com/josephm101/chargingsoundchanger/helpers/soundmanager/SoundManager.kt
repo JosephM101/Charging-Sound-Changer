@@ -40,10 +40,14 @@ class SoundManager {
     /**
      * Plays either the "ChargingStarted" sound or "ChargingStopped" sound using service settings
      *
+     * @param context The context of the calling activity, used to check the status of Do Not Disturb
+     * @param servicePreferences An instance of servicePreferences to load settings from such as sound volume
      * @param soundToPlay The sound to play
      * @param logTag The tag that the logger should use (should match the log tag used by the calling class/activity. e.g. "ChargingSoundService")
      * @param logMessagePrefix The text to put at the beginning of the log message, formatted as "%s: <message>". In this instance, this should be the name of the calling function. For example, "testChargingSound()"
-     * @param ignoreSoundEnableSetting Disregard the Enable sound setting. If true, even if the setting is disabled, the sound will play anyway.
+     * @param ignoreSoundEnableSetting When true, disregard the "Enable Sound" setting. Even if the "Enable Sound" setting is disabled, the requested sound will play anyway.
+     * @param onSoundCompleted The function to run when the sound has finished playing
+     *
      */
     fun playSound(
         context: Context,
@@ -51,7 +55,8 @@ class SoundManager {
         soundToPlay: Sounds,
         logTag: String = "SoundManager",
         logMessagePrefix: String? = "playSound()",
-        ignoreSoundEnableSetting: Boolean = false
+        ignoreSoundEnableSetting: Boolean = false,
+        onSoundCompleted: () -> Unit = {}
     ): SoundPlaybackResult {
         val uniqueCallID = (100..500).random() // Assign this sound playback request with a unique ID for logging purposes
 
@@ -143,6 +148,7 @@ class SoundManager {
             // When we're done, release resources currently held by the media player
             mediaPlayer.release()
             Log.d(logTag, makeLogMessage("mediaPlayer.release()"))
+            onSoundCompleted()
         }
 
         return SoundPlaybackResult.Success

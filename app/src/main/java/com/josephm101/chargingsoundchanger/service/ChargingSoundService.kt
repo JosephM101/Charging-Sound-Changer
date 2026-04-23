@@ -19,6 +19,7 @@ import com.josephm101.chargingsoundchanger.R
 import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundManager
 import com.josephm101.chargingsoundchanger.helpers.soundmanager.Sounds
 import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
+import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundPlaybackResult
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 
 /* A developer's note:
@@ -42,9 +43,9 @@ class ChargingSoundService : Service() {
      */
     private val showDebugToasts = false
 
-    val soundManager = SoundManager()
+    private val soundManager = SoundManager()
 
-    val serviceLogTag =
+    private val serviceLogTag =
         "ChargingSoundService" // This is the logging tag that we use for Log.[d/i/w/e]()
 
     /*
@@ -69,12 +70,12 @@ class ChargingSoundService : Service() {
             when (intent.action) {
                 ACTION_POWER_CONNECTED -> {
                     Log.i(serviceLogTag, "Received \"ACTION_POWER_CONNECTED\"")
-                    playChargingStartedSound()
+                    playSound(sound = Sounds.ChargingStarted)
                 }
 
                 ACTION_POWER_DISCONNECTED -> {
                     Log.i(serviceLogTag, "Received \"ACTION_POWER_DISCONNECTED\"")
-                    playChargingStoppedSound()
+                    playSound(sound = Sounds.ChargingStopped)
                 }
             }
         }
@@ -197,37 +198,56 @@ class ChargingSoundService : Service() {
         unregisterReceiver(onChargingStatusChangedReceiver)
     }
 
+    /**
+     * @param soundIsPlaying
+     *
+     * This allows us to prevent "race-condition" scenarios where the same or different sounds
+     * are triggered before other ones have completed (thus causing multiple sounds to play simultaneously
+     * and overlap) by ensuring that only a single sound is played at a time.
+     *
+     * An example of where this might happen is with a bad charging port or cable. Because of poor connections,
+     * the device can see the charger appear and disappear multiple times within a small window of time causing rapid-fire
+     * ACTION_POWER_CONNECTED and ACTION_POWER_DISCONNECTED intent actions to be sent out extremely close to
+     * each other. In testing, with my older phone which has a bad port, I heard the "Charging Started" and
+     * "Charging Stopped" sounds play multiple times over each other.
+     * This prevents that by not allowing more than one sound at a time to play.
+     *
+     * While true, playSound() will ignore requests.
+     */
+    var soundIsPlaying = false
 
     /* This is the magic! */
-    fun playChargingStartedSound() {
-        // Load the user preferences for the service
-        val servicePreferences = ServicePreferences(applicationContext)
+    fun playSound(sound: Sounds) {
+        if (!soundIsPlaying) {
+            soundIsPlaying = true
 
-        // If vibration is enabled, vibrate the device
-        if (servicePreferences.vibrationEnabled) {
-            val vibrationHelper = VibrationHelper(applicationContext)
-            vibrationHelper.vibrateMs(servicePreferences.vibrationLengthMs.toLong())
+            // Load the user preferences for the service
+            val servicePreferences = ServicePreferences(applicationContext)
+
+            // Only vibrate for "Charging Started" events
+            if (sound == Sounds.ChargingStarted) {
+                // If the vibration setting is enabled, vibrate the device
+                if (servicePreferences.vibrationEnabled) {
+                    val vibrationHelper = VibrationHelper(applicationContext)
+                    vibrationHelper.vibrateMs(servicePreferences.vibrationLengthMs.toLong())
+                }
+            }
+
+            val result = soundManager.playSound(
+                context = applicationContext,
+                servicePreferences = servicePreferences,
+                soundToPlay = sound,
+                logTag = serviceLogTag,
+                logMessagePrefix = "playSound()",
+                onSoundCompleted = {
+                    soundIsPlaying = false
+                }
+            )
+            if (result != SoundPlaybackResult.Success) {
+                soundIsPlaying = false // It was never playing anyway
+            }
+        } else {
+            Log.e(serviceLogTag, "playSound(): A sound is already playing. Skipping...")
         }
-
-        soundManager.playSound(
-            context = applicationContext,
-            servicePreferences = servicePreferences,
-            soundToPlay = Sounds.ChargingStarted,
-            logTag = serviceLogTag,
-            logMessagePrefix = "playChargingStartedSound()"
-        )
-    }
-
-    fun playChargingStoppedSound() {
-        // Load the user preferences for the service
-        val servicePreferences = ServicePreferences(applicationContext)
-
-        soundManager.playSound(
-            context = applicationContext,
-            servicePreferences = servicePreferences,
-            soundToPlay = Sounds.ChargingStopped,
-            logTag = serviceLogTag,
-            logMessagePrefix = "playChargingStoppedSound()"
-        )
     }
 }

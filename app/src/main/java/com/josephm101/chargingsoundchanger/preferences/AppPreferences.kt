@@ -16,6 +16,6 @@ class AppPreferences(context: Context) : SimpleKrate(context) {
     // The last version code that the KeepAndroidOpen warning was shown for
     var keepAndroidOpenWarningWasShownForThisVersionCode by longPref().withDefault(0)
 
-    var hideOverviewDevMessageCard by booleanPref().withDefault(false)
+    var hideUnstableBuildMessage by booleanPref().withDefault(false)
     var hideOverviewInfoMessageCard by booleanPref().withDefault(false)
 }

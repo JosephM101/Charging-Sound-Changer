@@ -16,6 +16,7 @@ import android.os.PowerManager
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,11 +25,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -49,6 +56,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Home
@@ -56,6 +64,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,8 +73,12 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
@@ -79,9 +92,11 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -114,12 +129,17 @@ import com.josephm101.chargingsoundchanger.service.ChargingSoundService
 import com.josephm101.chargingsoundchanger.ui.components.CenteredFooterText
 import com.josephm101.chargingsoundchanger.ui.components.card.CardConstants.cardDefaultBodyTextStyle
 import com.josephm101.chargingsoundchanger.ui.components.card.CustomCard.CustomCardWithTitleAndIconAndContent
+import com.josephm101.chargingsoundchanger.ui.components.card.IconButtonActionCard
 import com.josephm101.chargingsoundchanger.ui.components.card.SwitchCard
 import com.josephm101.chargingsoundchanger.ui.theme.BatterySoundChangerTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.InputStream
 import java.util.Locale
 import kotlin.math.roundToInt
+
+val appIsNotStableVersion = true
 
 sealed class Screens(val route: String, val icon: ImageVector, val label: String) {
     data object Home : Screens("home", Icons.Default.Home, "Home")
@@ -197,7 +217,7 @@ class MainActivity : ComponentActivity() {
         // Initialize vibration component
         vibrator = VibrationHelper(applicationContext)
 
-        // startChargingSoundService() Now handled by PostNotificationPermissionsCard()
+        // startChargingSoundService() // Now handled by PostNotificationPermissionsCard()
 
         val useNewNavigationSystem = true
 
@@ -205,10 +225,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BatterySoundChangerTheme {
-                //var navigationSelectedItem by remember { mutableIntStateOf(0) }
                 val navController = rememberNavController()
                 val slideTransitionDuration = 600
                 val scaleTransitionScale = 0.9f
+
+                val snackbarHostState = remember { SnackbarHostState() }
+                val coroutineScope = rememberCoroutineScope()
 
                 if (useNewNavigationSystem) {
                     NavHost(
@@ -237,6 +259,7 @@ class MainActivity : ComponentActivity() {
                             }
                         ) {
                             Scaffold(
+                                snackbarHost = { SnackbarHost(snackbarHostState) },
                                 modifier = Modifier.fillMaxSize(),
                                 topBar = {
                                     /// TODO: Add "More" menu icon button with links to GitHub repo, a link to the "Issues" section, and an "About" dialog with credits
@@ -276,7 +299,7 @@ class MainActivity : ComponentActivity() {
                                         .fillMaxSize()
                                         .padding(innerPadding)
                                 ) {
-                                    MainAppContent(navController)
+                                    MainAppContent(navController, snackbarHostState, coroutineScope)
                                 }
                             }
                         }
@@ -343,7 +366,6 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         topBar = {
-                            /// TODO: Add "More" menu icon button with links to GitHub repo, a link to the "Issues" section, and an "About" dialog with credits
                             TopAppBar(
                                 title = {
                                     Text(stringResource(id = R.string.app_display_name))
@@ -402,41 +424,11 @@ class MainActivity : ComponentActivity() {
                             popExitTransition = { transitionOut }
                         ) {
                             composable(
-                                Screens.Home.route,
-                                /*
-                                popEnterTransition = {
-                                    return@composable slideIntoContainer(
-                                        AnimatedContentTransitionScope.SlideDirection.End,
-                                        tween(slideTransitionDuration)
-                                    )
-                                },
-                                exitTransition = {
-                                    return@composable slideOutOfContainer(
-                                        AnimatedContentTransitionScope.SlideDirection.Start,
-                                        tween(slideTransitionDuration)
-                                    )
-                                }
-                                 */
+                                Screens.Home.route
                             ) {
-                                MainAppContent(navController)
+                                MainAppContent(navController, snackbarHostState, coroutineScope)
                             }
-                            composable(
-                                Screens.AdvancedSettings.route,
-                                /*
-                                enterTransition = {
-                                    return@composable slideIntoContainer(
-                                        AnimatedContentTransitionScope.SlideDirection.Start,
-                                        tween(slideTransitionDuration)
-                                    )//.plus(scaleIn(tween(slideTransitionDuration), initialScale = scaleTransitionScale))
-                                },
-                                popExitTransition = {
-                                    return@composable slideOutOfContainer(
-                                        AnimatedContentTransitionScope.SlideDirection.End,
-                                        tween(slideTransitionDuration)
-                                    )//.plus(scaleOut(tween(slideTransitionDuration), targetScale = scaleTransitionScale))
-                                }
-                                 */
-                            ) {
+                            composable(Screens.AdvancedSettings.route) {
                                 AdvancedSettingsScreen(navController)
                             }
                         }
@@ -448,17 +440,6 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun accentedText(text: String): AnnotatedString {
-        val annotatedText = buildAnnotatedString {
-            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
-                append(text)
-            }
-        }
-
-        return annotatedText
-    }
-
-    @Composable
     fun AndroidFreedomWarningDialog() {
         val dialogIsShown = remember {
             mutableStateOf(appPreferences.keepAndroidOpenWarningWasShownForThisVersionCode != appVersionCode)
@@ -467,6 +448,7 @@ class MainActivity : ComponentActivity() {
         fun rememberCurrentVersionCode() {
             appPreferences.keepAndroidOpenWarningWasShownForThisVersionCode = appVersionCode
         }
+
 
         when {
             dialogIsShown.value -> {
@@ -526,16 +508,36 @@ class MainActivity : ComponentActivity() {
             PreferencesTextLine("Advanced settings")
             SoundVolumePreferenceCard()
             //RespectDoNotDisturbPreferenceCard()
-            ShowDevMessagePreferenceCard()
             //DebounceEnabledPreferenceCard()
             PreferencesTextLine("Vibration")
             VibrationEnabledPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled)
             VibrationDurationPreferenceCard(vibrationDurationPreferenceCardShouldBeEnabled)
+            PreferencesTextLine("Miscellaneous")
+            AndroidSoundSettingsShortcutActionCard()
+            if (appIsNotStableVersion) {
+                ShowUnstableBuildMessagePreferenceCard()
+            }
         }
     }
 
     @Composable
-    fun MainAppContent(navController: NavHostController) {
+    private fun AndroidSoundSettingsShortcutActionCard() {
+        IconButtonActionCard(
+            "Open Android Sound Settings",
+            "A shortcut to the Sound page in Android Settings",
+            icon = {
+                Icon(Icons.AutoMirrored.Filled.OpenInNew, null)
+            },
+            onClick = { openAndroidSoundSettings() }
+        )
+    }
+
+    @Composable
+    fun MainAppContent(
+        navController: NavHostController,
+        snackbarHostState: SnackbarHostState,
+        coroutineScope: CoroutineScope
+    ) {
         Column(
             modifier = Modifier
                 // .padding(8.dp)
@@ -553,14 +555,17 @@ class MainActivity : ComponentActivity() {
                 OverviewChangeSoundSettingsMessageCard()
             }
 
-            if (!appPreferences.hideOverviewDevMessageCard) {
-                AppBetaMessageCard()
+            if (appIsNotStableVersion && !appPreferences.hideUnstableBuildMessage) {
+                AppUnstableBuildMessageCard()
             }
 
             // HorizontalDivider(modifier = Modifier.fillMaxWidth())
             PreferencesTextLine("Settings")
             SoundEnabledPreferenceCard()
-            SoundSetupPreferenceCard()
+            SoundSetupPreferenceCard(
+                snackbarHostState = snackbarHostState,
+                coroutineScope = coroutineScope
+            )
 
             // Draw footer
             Column(
@@ -581,6 +586,17 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    @Composable
+    fun accentedText(text: String): AnnotatedString {
+        val annotatedText = buildAnnotatedString {
+            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                append(text)
+            }
+        }
+
+        return annotatedText
     }
 
     @Composable
@@ -831,9 +847,7 @@ class MainActivity : ComponentActivity() {
                         TextButton(
                             onClick = {
                                 openAlertDialog.value = false
-                                val intent = Intent(Settings.ACTION_SOUND_SETTINGS)
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                startActivity(intent)
+                                openAndroidSoundSettings()
                             }
                         ) {
                             Text(
@@ -895,15 +909,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun openAndroidSoundSettings() {
+        val intent = Intent(Settings.ACTION_SOUND_SETTINGS)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
+    }
+
     //@Preview
     @Composable
-    fun AppBetaMessageCard() {
+    fun AppUnstableBuildMessageCard() {
         CustomCardWithTitleAndIconAndContent(
-            title = stringResource(R.string.ui_alphaBuildNoticeCard_title),
+            title = stringResource(R.string.ui_unstableBuildNoticeCard_title),
             iconResId = R.drawable.baseline_handyman_24
         ) {
             Text(
-                text = stringResource(R.string.ui_alphaBuildNoticeCard_message),
+                text = stringResource(R.string.ui_unstableBuildNoticeCard_message),
                 style = cardDefaultBodyTextStyle
             )
         }
@@ -998,13 +1018,13 @@ class MainActivity : ComponentActivity() {
      */
 
     @Composable
-    fun ShowDevMessagePreferenceCard() {
+    fun ShowUnstableBuildMessagePreferenceCard() {
         SwitchCard(
-            title = "Show alpha build message",
-            description = "Enable or disable the appearance of the alpha build message on the home screen",
-            booleanValue = !appPreferences.hideOverviewDevMessageCard,
+            title = "Show \"Unstable Build\" message",
+            description = "Enable or disable the appearance of the \"Unstable Build\" message on the home screen",
+            booleanValue = !appPreferences.hideUnstableBuildMessage,
             onCheckedChange = { value ->
-                appPreferences.hideOverviewDevMessageCard = !value
+                appPreferences.hideUnstableBuildMessage = !value
             }
         )
     }
@@ -1035,28 +1055,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun testSound(sound: Sounds = Sounds.ChargingStarted) {
+    fun testSound(sound: Sounds = Sounds.ChargingStarted,
+                  onSoundStarted: (Int) -> Unit = {},
+                  onSoundCompleted: () -> Unit = {}
+    ): SoundPlaybackResult {
         val result = chargingSoundManager.playSound(
             context = applicationContext,
             servicePreferences = servicePreferences,
             soundToPlay = sound,
             logTag = LoggerTags.MainActivity.DEFAULT,
-            logMessagePrefix = "testChargingSound()"
+            logMessagePrefix = "testSound()",
+            onSoundStarted = onSoundStarted,
+            onSoundCompleted = onSoundCompleted,
+            //progressListener = onProgress
         )
-
-        when (result) {
-            SoundPlaybackResult.SoundsDisabled -> {
-                Toast.makeText(applicationContext, "Sounds are disabled", Toast.LENGTH_SHORT)
-                    .show()
-            }
-
-            SoundPlaybackResult.DoNotDisturbIsEnabled -> {
-                Toast.makeText(applicationContext, "Do Not Disturb is enabled", Toast.LENGTH_SHORT)
-                    .show()
-            }
-
-            else -> {}
-        }
+        return result
     }
 
     fun importSoundFile(uri: Uri, fileName: String, soundToSave: Sounds): SaveSoundResult {
@@ -1159,7 +1172,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("Range")
     @Composable
-    fun SoundSetupPreferenceCard() {
+    fun SoundSetupPreferenceCard(snackbarHostState: SnackbarHostState, coroutineScope: CoroutineScope) {
         CustomCardWithTitleAndIconAndContent(
             title = stringResource(R.string.ui_chooseSoundPreferenceCard_title),
             iconResId = R.drawable.baseline_audiotrack_24
@@ -1173,6 +1186,8 @@ class MainActivity : ComponentActivity() {
             val showFileOpenErrorDialog = remember { mutableStateOf(false) }
             var fileOpenErrorDialogMessageTitle by remember { mutableStateOf(getString(R.string.ui_soundChooser_errorOpeningFile_dialogTitle)) }
             var fileOpenErrorDialogMessageBodyText by remember { mutableStateOf("") }
+
+            val isAnySoundCurrentlyBeingTested = remember { mutableStateOf(false) }
 
             @Composable
             fun SoundRow(soundType: Sounds) {
@@ -1247,6 +1262,16 @@ class MainActivity : ComponentActivity() {
                 val mimeTypes = arrayOf("audio/mpeg", "audio/wav", "audio/x-wav", "audio/ogg", "audio/opus")
 
                 val openFilePermissionsAlertDialog = remember { mutableStateOf(false) }
+
+                val isThisSoundCurrentlyBeingTested = remember { mutableStateOf(false) }
+                val soundPlaybackDuration = remember { mutableIntStateOf(0) }
+                val progress = remember { mutableFloatStateOf(0.0f) }
+                val animatedProgress by animateFloatAsState(
+                    //targetValue = if (isThisSoundCurrentlyBeingTested.value) 1.0f else 0.0f,
+                    targetValue = progress.floatValue,
+                    animationSpec = tween(durationMillis = soundPlaybackDuration.intValue, easing = LinearEasing)
+                )
+
                 when {
                     openFilePermissionsAlertDialog.value -> {
                         AlertDialog(
@@ -1340,9 +1365,9 @@ class MainActivity : ComponentActivity() {
                                 Spacer(Modifier.size(width = 4.dp, height = 0.dp))
                             }
 
-                            val showResetSoundDialog = remember { mutableStateOf(false) }
+                            val showForgetSoundDialog = remember { mutableStateOf(false) }
                             when {
-                                showResetSoundDialog.value -> {
+                                showForgetSoundDialog.value -> {
                                     AlertDialog(
                                         title = {
                                             Text(text = "Forget sound")
@@ -1350,33 +1375,41 @@ class MainActivity : ComponentActivity() {
                                         text = {
                                             Text(text = "Are you sure you want to forget that sound?")
                                         },
-                                        onDismissRequest = { showResetSoundDialog.value = false },
+                                        onDismissRequest = { showForgetSoundDialog.value = false },
                                         confirmButton = {
-                                            TextButton(onClick = {
-                                                showResetSoundDialog.value = false
+                                            TextButton(
+                                                onClick = {
+                                                    showForgetSoundDialog.value = false
 
-                                                when (soundType) {
-                                                    Sounds.ChargingStarted -> {
-                                                        servicePreferences.chargingStartedSoundFilePath = ""
-                                                        servicePreferences.chargingStartedSoundFileName = ""
-                                                        chargingStartedSoundFileName = ""
-                                                        testChargingStartedSoundButtonIsEnabled = false
-                                                    }
+                                                    when (soundType) {
+                                                        Sounds.ChargingStarted -> {
+                                                            servicePreferences.chargingStartedSoundFilePath =
+                                                                ""
+                                                            servicePreferences.chargingStartedSoundFileName =
+                                                                ""
+                                                            chargingStartedSoundFileName = ""
+                                                            testChargingStartedSoundButtonIsEnabled =
+                                                                false
+                                                        }
 
-                                                    Sounds.ChargingStopped -> {
-                                                        servicePreferences.chargingStoppedSoundFilePath = ""
-                                                        servicePreferences.chargingStoppedSoundFileName = ""
-                                                        chargingStoppedSoundFileName = ""
-                                                        testChargingStoppedSoundButtonIsEnabled = false
+                                                        Sounds.ChargingStopped -> {
+                                                            servicePreferences.chargingStoppedSoundFilePath =
+                                                                ""
+                                                            servicePreferences.chargingStoppedSoundFileName =
+                                                                ""
+                                                            chargingStoppedSoundFileName = ""
+                                                            testChargingStoppedSoundButtonIsEnabled =
+                                                                false
+                                                        }
                                                     }
                                                 }
-                                            }) {
+                                            ) {
                                                 Text("Forget")
                                             }
                                         },
                                         dismissButton = {
                                             TextButton(onClick = {
-                                                showResetSoundDialog.value = false
+                                                showForgetSoundDialog.value = false
                                             }) {
                                                 Text(stringResource(R.string.cancel))
                                             }
@@ -1384,7 +1417,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             }
-                            
+
                             TooltipBox(
                                 positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
                                 tooltip = {
@@ -1393,12 +1426,12 @@ class MainActivity : ComponentActivity() {
                                 state = rememberTooltipState()
                             ) {
                                 IconButton(
-                                    enabled = when (soundType) {
+                                    enabled = !isAnySoundCurrentlyBeingTested.value && when (soundType) {
                                         Sounds.ChargingStarted -> testChargingStartedSoundButtonIsEnabled
                                         Sounds.ChargingStopped -> testChargingStoppedSoundButtonIsEnabled
                                     },
                                     onClick = {
-                                        showResetSoundDialog.value = true
+                                        showForgetSoundDialog.value = true
                                     },
                                     modifier = iconButtonModifier
                                 ) {
@@ -1416,6 +1449,7 @@ class MainActivity : ComponentActivity() {
                                 state = rememberTooltipState()
                             ) {
                                 IconButton(
+                                    enabled = !isAnySoundCurrentlyBeingTested.value,
                                     onClick = {
                                         if (!hasExternalStoragePermissions()) {
                                             openFilePermissionsAlertDialog.value = true
@@ -1440,15 +1474,101 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 IconButton(
                                     onClick = {
-                                        testSound(soundType)
+                                        if (!isAnySoundCurrentlyBeingTested.value && progress.floatValue == 0.0f) {
+                                            isThisSoundCurrentlyBeingTested.value = true
+                                            isAnySoundCurrentlyBeingTested.value = true
+
+                                            soundPlaybackDuration.intValue = 0
+                                            progress.floatValue = 0.0f
+
+                                            val result = testSound(
+                                                soundType,
+                                                onSoundStarted = { duration ->
+                                                    soundPlaybackDuration.intValue = duration
+                                                    progress.floatValue = 1.0f
+                                                },
+                                                onSoundCompleted = {
+                                                    val delayedExecutionHandler =
+                                                        Handler(Looper.getMainLooper())
+                                                    delayedExecutionHandler.postDelayed(
+                                                        {
+                                                            isThisSoundCurrentlyBeingTested.value =
+                                                                false
+                                                            isAnySoundCurrentlyBeingTested.value =
+                                                                false
+                                                        }, 100
+                                                    )
+                                                    delayedExecutionHandler.postDelayed(
+                                                        {
+                                                            if (!isAnySoundCurrentlyBeingTested.value) {
+                                                                soundPlaybackDuration.intValue = 0
+                                                                progress.floatValue = 0.0f
+                                                            }
+                                                        }, 300
+                                                    )
+                                                },
+                                            )
+
+                                            if (result != SoundPlaybackResult.Success) {
+                                                isThisSoundCurrentlyBeingTested.value = false
+                                                isAnySoundCurrentlyBeingTested.value = false
+                                            }
+
+                                            when (result) {
+                                                SoundPlaybackResult.SoundsDisabled -> {
+                                                    coroutineScope.launch {
+                                                        snackbarHostState.showSnackbar(
+                                                            message = "Sounds are disabled.",
+                                                            withDismissAction = true,
+                                                            duration = SnackbarDuration.Short
+                                                        )
+                                                    }
+                                                }
+
+                                                SoundPlaybackResult.DoNotDisturbIsEnabled -> {
+                                                    coroutineScope.launch {
+                                                        snackbarHostState.showSnackbar(
+                                                            message = "Do Not Disturb is enabled.",
+                                                            withDismissAction = true,
+                                                            duration = SnackbarDuration.Short
+                                                        )
+                                                    }
+                                                }
+
+                                                else -> {}
+                                            }
+                                        }
                                     },
                                     modifier = iconButtonModifier,
-                                    enabled = when (soundType) {
+                                    enabled = !isAnySoundCurrentlyBeingTested.value && when (soundType) {
                                         Sounds.ChargingStarted -> testChargingStartedSoundButtonIsEnabled
                                         Sounds.ChargingStopped -> testChargingStoppedSoundButtonIsEnabled
                                     }
                                 ) {
-                                    Icon(Icons.Filled.PlayArrow, "Test")
+                                    AnimatedVisibility(
+                                        visible = !isThisSoundCurrentlyBeingTested.value,
+                                        enter = fadeIn(animationSpec = tween(500))
+                                                + scaleIn(tween(400)),
+                                        exit = scaleOut(tween(300))
+                                    ) {
+                                        Icon(Icons.Filled.PlayArrow, "Test")
+                                    }
+
+                                    AnimatedVisibility(
+                                        visible = isThisSoundCurrentlyBeingTested.value,
+                                        enter = fadeIn(animationSpec = tween(0)),
+                                        exit = fadeOut(animationSpec = tween(400))
+                                                + scaleOut(tween(400))
+                                    ) {
+                                        CircularProgressIndicator(
+                                            progress = { animatedProgress },
+                                            modifier = Modifier.fillMaxSize(0.8f),
+                                            //color = ProgressIndicatorDefaults.circularColor,
+                                            //strokeWidth = 4.dp,
+                                            //trackColor = ProgressIndicatorDefaults.circularTrackColor,
+                                            strokeCap = StrokeCap.Round,
+                                        )
+                                    }
                                 }
                             }
                         }

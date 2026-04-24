@@ -3,6 +3,8 @@ package com.josephm101.chargingsoundchanger.helpers.soundmanager
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.josephm101.chargingsoundchanger.helpers.DoNotDisturbHelper
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
@@ -56,9 +58,12 @@ class SoundManager {
         logTag: String = "SoundManager",
         logMessagePrefix: String? = "playSound()",
         ignoreSoundEnableSetting: Boolean = false,
-        onSoundCompleted: () -> Unit = {}
+        onSoundStarted: (duration: Int) -> Unit = {},
+        onSoundCompleted: () -> Unit = {},
+        //progressListener: ((progress: Float, pos: Int, duration: Int) -> Unit)? = null
     ): SoundPlaybackResult {
-        val uniqueCallID = (100..500).random() // Assign this sound playback request with a unique ID for logging purposes
+        val uniqueCallID =
+            (100..500).random() // Assign this sound playback request with a unique ID for logging purposes
 
         fun makeLogMessage(message: String): String {
             // Merge the uniqueCallID and log message together
@@ -66,7 +71,8 @@ class SoundManager {
 
             // If logMessagePrefix is not null or blank, join it and the logMessageBody string (respectively) together.
             // Otherwise, just return "logMessageBody"
-            return logMessagePrefix?.ifBlank { null }?.let { "$it: $logMessageBody" } ?: logMessageBody
+            return logMessagePrefix?.ifBlank { null }?.let { "$it: $logMessageBody" }
+                ?: logMessageBody
         }
 
         // Check if sounds are disabled
@@ -139,7 +145,45 @@ class SoundManager {
 
         // Play the sound!
         Log.i(logTag, makeLogMessage("Playing audio"))
-        mediaPlayer.start()
+        try {
+            mediaPlayer.start()
+        } catch (e: IllegalStateException) {
+            Log.e(logTag, makeLogMessage("ERROR: mediaPlayer.start() threw IllegalStateException"))
+            e.printStackTrace()
+            return SoundPlaybackResult.IllegalStateException
+        }
+
+        onSoundStarted(mediaPlayer.duration)
+
+        Log.d(logTag, makeLogMessage("duration: ${mediaPlayer.duration}"))
+
+        /*
+        if (progressListener != null) {
+            val loopHandler = Handler(Looper.getMainLooper())
+            val refreshMs: Long = 10
+            val reportProgressTimer = object : Runnable {
+                override fun run() {
+                    try {
+                        Log.d(logTag, makeLogMessage("pos: ${mediaPlayer.currentPosition}"))
+                        progressListener.invoke(
+                            (mediaPlayer.currentPosition.toFloat() / mediaPlayer.duration.toFloat()),
+                            mediaPlayer.currentPosition,
+                            mediaPlayer.duration
+                        )
+                        if (mediaPlayer.isPlaying) {
+                            loopHandler.postDelayed(this, refreshMs)
+                        }
+                    } catch (e: java.lang.IllegalStateException) {
+                        Log.i(
+                            logTag,
+                            makeLogMessage("reportProgress: Got IllegalStateException. Whatever, it's probably a race condition.")
+                        )
+                    }
+                }
+            }
+            loopHandler.postDelayed(reportProgressTimer, refreshMs)
+        }
+         */
 
         // Set what we should do when playback is finished
         mediaPlayer.setOnCompletionListener {

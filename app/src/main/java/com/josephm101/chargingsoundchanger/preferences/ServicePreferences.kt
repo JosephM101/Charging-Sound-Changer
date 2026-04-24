@@ -29,8 +29,7 @@ class ServicePreferences(context: Context) : SimpleKrate(context) {
 
     // When sound is played, wait a preset amount of time before it's possible to play the sound again.
     // May be useful for devices with finicky chargers, connections, etc.
-    /// TODO: debounceEnabled should be implemented
-    //var debounceEnabled by booleanPref().withDefault(false)
+    var debounceEnabled by booleanPref().withDefault(false)
 
     // If Do Not Disturb is enabled, the sound and vibration will not play.
     // This replicates default Android behavior.

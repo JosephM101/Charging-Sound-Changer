@@ -21,6 +21,8 @@ import com.josephm101.chargingsoundchanger.helpers.soundmanager.Sounds
 import com.josephm101.chargingsoundchanger.helpers.VibrationHelper
 import com.josephm101.chargingsoundchanger.helpers.soundmanager.SoundPlaybackResult
 import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
+import java.util.LinkedList
+import java.util.Queue
 
 /* A developer's note:
 
@@ -42,6 +44,8 @@ class ChargingSoundService : Service() {
      * Useful if you can't get to a debugger fast enough to diagnose an issue.
      */
     private val showDebugToasts = false
+
+    private val soundQueue: Queue<Sounds> = LinkedList()
 
     private val soundManager = SoundManager()
 
@@ -216,13 +220,50 @@ class ChargingSoundService : Service() {
      */
     var soundIsPlaying = false
 
+    /**
+     * @param lastSoundPlayed
+     *
+     * Only used when playing from the sound queue to make sure that the same sound doesn't immediately follow itself
+     */
+    var lastSoundPlayed: Sounds? = null
+
+
+    private fun soundQueueAsString(): String {
+        return soundQueue.joinToString(", ")
+    }
+
     /* This is the magic! */
-    fun playSound(sound: Sounds) {
+    private fun playSound(sound: Sounds) {
+        // Load the user preferences for the service
+        val servicePreferences = ServicePreferences(applicationContext)
+
+        fun checkSoundQueue() {
+            // Check the sound queue
+            if (soundQueue.isNotEmpty()) {
+                Log.d(serviceLogTag, "checkSoundQueue(): soundQueue = ${soundQueueAsString()}")
+
+                val nextUp = soundQueue.remove() // Pull a value from the sound queue
+
+                // Make sure the queued sound is not the same as the one just played
+                if (nextUp != lastSoundPlayed) {
+                    Log.i(serviceLogTag, "will play from queue: ${nextUp.name}")
+                    playSound(nextUp)
+                } else {
+                    Log.i(serviceLogTag, "Not playing the same sound again")
+                    checkSoundQueue() // Recursive call; check the queue again
+                }
+            } else {
+                Log.i(serviceLogTag, "Sound queue is empty")
+                lastSoundPlayed = null
+            }
+        }
+        fun afterSoundIsFinishedPlaying() {
+            soundIsPlaying = false
+            checkSoundQueue()
+        }
+
         if (!soundIsPlaying) {
             soundIsPlaying = true
-
-            // Load the user preferences for the service
-            val servicePreferences = ServicePreferences(applicationContext)
 
             // Only vibrate for "Charging Started" events
             if (sound == Sounds.ChargingStarted) {
@@ -240,14 +281,17 @@ class ChargingSoundService : Service() {
                 logTag = serviceLogTag,
                 logMessagePrefix = "playSound()",
                 onSoundCompleted = {
-                    soundIsPlaying = false
+                    lastSoundPlayed = sound
+                    afterSoundIsFinishedPlaying()
                 }
             )
             if (result != SoundPlaybackResult.Success) {
-                soundIsPlaying = false // It was never playing anyway
+                afterSoundIsFinishedPlaying()
             }
         } else {
-            Log.e(serviceLogTag, "playSound(): A sound is already playing. Skipping...")
+            //Log.e(serviceLogTag, "playSound(): A sound is already playing. Skipping...")
+            Log.i(serviceLogTag, "playSound(): A sound is already playing. Adding to queue...")
+            soundQueue.add(sound)
         }
     }
 }

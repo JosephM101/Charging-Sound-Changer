@@ -1,4 +1,5 @@
 package com.josephm101.chargingsoundchanger.service
+import android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -24,16 +25,13 @@ import com.josephm101.chargingsoundchanger.preferences.ServicePreferences
 import java.util.LinkedList
 import java.util.Queue
 
-/* A developer's note:
+/* Developer's note:
 
 Android development is kinda weird, especially when it comes to services.
 There is still a bunch of boilerplate code (makes up most of this source file) to do the following:
  - Start the service
  - Create a persistent notification that keeps Android from killing the service (hopefully)
  - Restarting if Android decides to kill the service anyway (more likely on low-memory devices)
-
-The only part of this service that achieves the "charging sound" part is the playChargingSound()
-function (towards the bottom of this file)
  */
 
 class ChargingSoundService : Service() {
@@ -63,11 +61,11 @@ class ChargingSoundService : Service() {
 
     /*
     This BroadcastReceiver is one of the most important parts of the service.
-    This is how we detect a charger being plugged in.
+    This is how we detect a charger being plugged in or removed.
 
     When registered, if Android broadcasts a system-wide action notification that the IntentFilter
     (assigned to the receiver in onStartCommand()) is set up to look for, onReceive() will be
-    called within the receiver. *This* is where we call our playChargingSound() function.
+    called within the receiver. *This* is where we call our playSound() function.
      */
     private val onChargingStatusChangedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -153,7 +151,7 @@ class ChargingSoundService : Service() {
             )
 
         /* Now we'll build the notification */
-        val serviceNotification = NotificationCompat.Builder(
+        val notificationBuilder = NotificationCompat.Builder(
             this,
             persistentNotificationChannelID
         ) // Create notification builder, assign channel ID
@@ -163,7 +161,12 @@ class ChargingSoundService : Service() {
             .setCategory(NotificationCompat.CATEGORY_SERVICE) // Make this a service notification
             .setOngoing(true) // This makes it persistent
             .setContentIntent(pendingIntent) // When the notification is tapped, launch MainActivity.
-            .build() // Put it all together!
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            notificationBuilder.setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
+        }
+
+        val serviceNotification = notificationBuilder.build()
 
         /* Start the service as a foreground service with the notification we just created. */
         startForeground(persistentNotificationID, serviceNotification)

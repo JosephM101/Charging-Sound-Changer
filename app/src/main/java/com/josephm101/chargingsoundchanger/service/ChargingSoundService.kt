@@ -230,15 +230,15 @@ class ChargingSoundService : Service() {
      */
     var lastSoundPlayed: Sounds? = null
 
-
-    private fun soundQueueAsString(): String {
-        return soundQueue.joinToString(", ")
-    }
-
     /* This is the magic! */
     private fun playSound(sound: Sounds) {
+        /// TODO: Look into why sounds are slightly delayed when the main activity is not in focus
         // Load the user preferences for the service
         val servicePreferences = ServicePreferences(applicationContext)
+
+        fun soundQueueAsString(): String {
+            return soundQueue.joinToString(", ")
+        }
 
         fun checkSoundQueue() {
             // Check the sound queue

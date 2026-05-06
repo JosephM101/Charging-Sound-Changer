@@ -17,7 +17,6 @@ Starts the ChargingSoundService when Android finishes booting
 
 class BootReceiver : BroadcastReceiver() {
     private val tagBootBroadcastReceiver = "BOOT_BROADCAST_RECEIVER"
-    private lateinit var internalAppPreferences: SharedPreferences
 
     // Set logging tag to the simple name of the class
     private val logTag = BootReceiver::class.java.simpleName
@@ -30,10 +29,10 @@ class BootReceiver : BroadcastReceiver() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     Log.d(logTag, "Starting ChargingSoundService (SDK >=26)")
                     context.startForegroundService(it)
-                    return
+                } else {
+                    Log.d(logTag, "Starting ChargingSoundService (SDK <26)")
+                    context.startService(it)
                 }
-                Log.d(logTag, "Starting ChargingSoundService (SDK <26)")
-                context.startService(it)
             }
         }
     }

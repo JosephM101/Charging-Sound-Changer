@@ -51,7 +51,7 @@ class SoundManager {
      * @param onSoundCompleted The function to run when the sound has finished playing
      *
      */
-    fun playSound(
+    fun playSound( /// TODO: Look into using SoundPool instead of MediaPlayer
         context: Context,
         servicePreferences: ServicePreferences,
         soundToPlay: Sounds,

@@ -4,13 +4,15 @@
 Charging Sound Changer is a very simple and fun Android app that "replaces" your device's built-in charging sound with one of your choosing.
 
 _I made this because I was bored lol_ In all seriousness, I enjoy doing goofy projects like these, even if the work it takes to get there was tedious and made me put this off for a year _(which, in the case of this app, mostly consisted of UI garbage and boilerplate, permissions management across various versions of Android and making sure there was less of a chance of the OS terminating the sound service in the background)_
-Either way, it's (nearly) finished now, and ready for anyone keen to test out!
 
+Either way, it's (nearly) finished now, and ready for anyone keen to test it out!
+
+---
 Minimum OS: Android 6 (Marshmallow), SDK 23
 
 This app supports (and has been tested with) WAV and MP3 files with a 5-second duration limit.
 
-**Proudly written with love, and _without_ "AI" :)**
+**Proudly written _without_ "AI/ML/LLMs" :)**
 
 ## How to use
 This app effectively replaces Android's built-in sound that plays when a device is plugged in. Before enabling this app, you should disable your device's built-in functionality.
